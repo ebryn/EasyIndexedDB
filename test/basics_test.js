@@ -81,8 +81,8 @@ asyncTest("creating a transaction", function() {
   });
 });
 
-asyncTest("adding, getting, and removing a record", function() {
-  expect(4);
+asyncTest("adding, getting, putting, and removing a record", function() {
+  expect(6);
 
   EIDB.open("foo", 1, function(db) {
     start();
@@ -103,6 +103,15 @@ asyncTest("adding, getting, and removing a record", function() {
 
         equal(obj.id, 1);
         equal(obj.name, "Erik");
+
+        stop();
+        obj.name = "Kris";
+        store.put(obj).then(function(obj) {
+          start();
+
+          equal(obj.id, 1);
+          equal(obj.name, "Kris");
+        });
       });
 
       stop();

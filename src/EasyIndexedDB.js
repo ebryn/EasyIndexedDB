@@ -98,6 +98,21 @@
       });
     },
 
+    put: function(obj, key) {
+      var self = this;
+
+      return new Promise(function(resolve, reject) {
+        var req = key ? self._idbObjectStore.put(obj, key) : self._idbObjectStore.put(obj);
+
+        req.onsuccess = function(event) {
+          resolve(obj); // NOTE: event.target.result seems to be the ID, not the object
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
+    },
+
     "delete": function(key) {
       var self = this;
 

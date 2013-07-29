@@ -3,7 +3,7 @@
 QUnit.config.testTimeout = 1000;
 
 RSVP.configure('onerror', function(error) {
-  console.log('RSVP onerror', error, error.message + '');
+  console.log('RSVP onerror', error, error.message + '', error.stack);
 });
 
 // function uniqueDBName(prefix) {
@@ -123,4 +123,46 @@ asyncTest("adding, getting, putting, and removing a record", function() {
       });
     });
   });
+});
+
+asyncTest("simpler APIs", function() {
+  expect(7);
+
+  EIDB.open("foo", 1, function(db) {
+    start();
+    var store = db.createObjectStore("people", { keyPath: "id" });
+  }).then(function(db) {
+    stop();
+    db.add("people", 1, {name: "Erik"}).then(function(obj) {
+      start();
+      equal(obj.id, 1, "obj from add is correct");
+      equal(obj.name, "Erik", "obj from add is correct");
+
+      stop();
+      db.get("people", 1).then(function(obj) {
+        start();
+
+        equal(obj.id, 1, "obj from get is correct");
+        equal(obj.name, "Erik", "obj from get is correct");
+
+        stop();
+        obj.name = "Kris";
+        db.put("people", 1, obj).then(function(obj) {
+          start();
+
+          equal(obj.id, 1, "obj from put is correct");
+          equal(obj.name, "Kris", "obj from put is correct");
+        });
+      });
+
+      stop();
+      db.delete("people", 1).then(function(event) {
+        start();
+        ok(event, "Event was passed in when resolved");
+
+        db.close();
+      });
+    });
+  });
+
 });

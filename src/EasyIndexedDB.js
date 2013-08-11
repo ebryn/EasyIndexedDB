@@ -90,7 +90,7 @@
     add: function(objectStore, id, obj) {
       var tx = this.transactionFor(objectStore),
           store = tx.objectStore(objectStore),
-          key = "id"; // FIXME: use keyPath
+          key = store.keyPath;
 
       obj[key] = id;
       return store.add(obj).then(function(event) {
@@ -107,7 +107,7 @@
     put: function(objectStore, id, obj) {
       var tx = this.transactionFor(objectStore),
           store = tx.objectStore(objectStore),
-          key = "id"; // FIXME: use keyPath
+          key = store.keyPath;
 
       obj[key] = id;
       return store.put(obj);
@@ -122,10 +122,12 @@
 
   var ObjectStore = EIDB.ObjectStore = function(idbObjectStore) {
     this._idbObjectStore = idbObjectStore;
+    this.keyPath = idbObjectStore.keyPath;
   };
 
   ObjectStore.prototype = {
     _idbObjectStore: null,
+    keyPath: null,
 
     add: function(obj) {
       var self = this;

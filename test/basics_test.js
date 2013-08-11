@@ -126,17 +126,17 @@ asyncTest("adding, getting, putting, and removing a record", function() {
 });
 
 asyncTest("simpler APIs", function() {
-  expect(7);
+  expect(8);
 
   EIDB.open("foo", 1, function(db) {
     start();
-    var store = db.createObjectStore("people", { keyPath: "id" });
+    var store = db.createObjectStore("people", { keyPath: "myId" });
   }).then(function(db) {
     stop();
 
     db.add("people", 1, {name: "Erik"}).then(function(obj) {
       start();
-      equal(obj.id, 1, "obj from add is correct");
+      equal(obj.myId, 1, "obj from add is correct");
       equal(obj.name, "Erik", "obj from add is correct");
 
       stop();
@@ -144,7 +144,7 @@ asyncTest("simpler APIs", function() {
     }).then(function(obj) {
       start();
 
-      equal(obj.id, 1, "obj from get is correct");
+      equal(obj.myId, 1, "obj from get is correct");
       equal(obj.name, "Erik", "obj from get is correct");
 
       stop();
@@ -153,8 +153,15 @@ asyncTest("simpler APIs", function() {
     }).then(function(obj) {
       start();
 
-      equal(obj.id, 1, "obj from put is correct");
+      equal(obj.myId, 1, "obj from put is correct");
       equal(obj.name, "Kris", "obj from put is correct");
+
+      stop();
+      return db.put("people", 2, obj);
+    }).then(function(obj) {
+      start();
+
+      equal(obj.myId, 2, "obj from put has correct key path");
 
       stop();
       return db.delete("people", 1);

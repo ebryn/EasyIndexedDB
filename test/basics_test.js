@@ -172,5 +172,29 @@ asyncTest("simpler APIs", function() {
       db.close();
     });
   });
+});
 
+asyncTest('ObjectStore API - indexes', function() {
+  expect(5);
+
+  EIDB.open('foo', 1, function(db) {
+    start();
+    var index, indexNames,
+        store = db.createObjectStore("people", { keyPath: "myId" });
+
+    store.createIndex('by_name', 'name', {unique: true});
+
+    index = store.index('by_name');
+    indexNames = store.indexNames;
+
+    ok(index instanceof IDBIndex, "#index returns an IDBIndex");
+    ok(index.unique, '#createIndex passes along params');
+    ok(indexNames instanceof DOMStringList, "#indexNames returns a DOMStringList");
+    ok(indexNames.contains('by_name'), '#indexNames contains the names of the indexes');
+
+    store.deleteIndex('by_name');
+    ok(!store.indexNames.contains('by_name'), '#deleteIndex removes the index');
+
+    db.close();
+  });
 });

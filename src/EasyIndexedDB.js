@@ -187,6 +187,28 @@
           reject(event);
         };
       });
+    },
+
+    indexNames: null,
+
+    index: function(name) {
+      return this._idbObjectStore.index(name);
+    },
+
+    createIndex: function(name, keyPath, params) {
+      var store = this._idbObjectStore,
+          index = store.createIndex(name, keyPath, params);
+
+      this.indexNames = store.indexNames;
+      return index;
+    },
+
+    deleteIndex: function(name) {
+      var store = this._idbObjectStore,
+          res = store.deleteIndex(name);
+
+      this.indexNames = store.indexNames;
+      return res;
     }
   };
 

@@ -175,10 +175,9 @@ asyncTest("simpler APIs", function() {
 });
 
 asyncTest('ObjectStore API - indexes', function() {
-  expect(5);
+  expect(6);
 
   EIDB.open('foo', 1, function(db) {
-    start();
     var index, indexNames,
         store = db.createObjectStore("people", { keyPath: "myId" });
 
@@ -195,6 +194,15 @@ asyncTest('ObjectStore API - indexes', function() {
     store.deleteIndex('by_name');
     ok(!store.indexNames.contains('by_name'), '#deleteIndex removes the index');
 
+    store.createIndex('by_name', 'name', {unique: true});
     db.close();
+
+    EIDB.open('foo', 2).then(function(db) {
+      var store = db.transaction('people').objectStore('people');
+      ok(store.indexNames.contains('by_name'), "new store object finds an existing index");
+
+      db.close();
+      start();
+    });
   });
 });

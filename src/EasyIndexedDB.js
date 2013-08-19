@@ -123,6 +123,7 @@
   var ObjectStore = EIDB.ObjectStore = function(idbObjectStore) {
     this._idbObjectStore = idbObjectStore;
     this.keyPath = idbObjectStore.keyPath;
+    this.indexNames = idbObjectStore.indexNames;
   };
 
   ObjectStore.prototype = {

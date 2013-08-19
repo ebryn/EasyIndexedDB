@@ -330,6 +330,30 @@
           reject(event);
         };
       });
+    },
+
+    getAll: function(range, direction) {
+      var self = this;
+      range = range || null;
+      direction = direction || 'next';
+
+      return new Promise(function(resolve, reject) {
+        var req = self._idbIndex.openCursor(range, direction);
+        var res = [];
+
+        req.onsuccess = function(event) {
+          var cursor = event.target.result;
+          if (cursor) {
+            res.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(res);
+          }
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
     }
   };
 

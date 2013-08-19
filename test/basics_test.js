@@ -227,7 +227,7 @@ asyncTest('Index API - properties', function() {
 });
 
 asyncTest('Index API - requests', function() {
-  expect(10);
+  expect(11);
 
   EIDB.open('foo', 1, function(db) {
     var store = db.createObjectStore("people", {keyPath: "id"});
@@ -270,6 +270,11 @@ asyncTest('Index API - requests', function() {
     index.count().then(function(count) {
       equal(count, 3, "#count returns the total number of records if no key given");
     })
+
+    index.getAll('Erik').then(function(result) {
+      expected = [{id: 1, name: "Erik"}, {id:2, name: "Erik"}]
+      deepEqual(result, expected, "#getAll collects the #openCursor results");
+    });
 
     start();
     db.close();

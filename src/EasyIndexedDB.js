@@ -193,7 +193,7 @@
     indexNames: null,
 
     index: function(name) {
-      return this._idbObjectStore.index(name);
+      return new EIDB.Index(this._idbObjectStore.index(name));
     },
 
     createIndex: function(name, keyPath, params) {
@@ -201,7 +201,7 @@
           index = store.createIndex(name, keyPath, params);
 
       this.indexNames = store.indexNames;
-      return index;
+      return new EIDB.Index(index);
     },
 
     deleteIndex: function(name) {
@@ -234,9 +234,103 @@
 
   Request.prototype = {
     _idbRequest: null,
-
-
   };
 
+  var Index = EIDB.Index = function(idbIndex) {
+    this._idbIndex = idbIndex;
+    this.name = idbIndex.name;
+    this.objectStore = idbIndex.objectStore;
+    this.keyPath = idbIndex.keyPath;
+    this.multiEntry = idbIndex.multiEntry;
+    this.unique = idbIndex.unique;
+  }
+
+  Index.prototype = {
+    _idbIndex: null,
+    name: null,
+    objectStore: null,
+    keyPath: null,
+    multiEntry: null,
+    unique: null,
+
+    openCursor: function(range, direction) {
+      var self = this;
+      range = range || null;
+      direction = direction || 'next';
+
+      return new Promise(function(resolve, reject) {
+        var req = self._idbIndex.openCursor(range, direction);
+
+        req.onsuccess = function(event) {
+          resolve(event.target.result);
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
+    },
+
+    openKeyCursor: function(range, direction) {
+      var self = this;
+      range = range || null;
+      direction = direction || 'next';
+
+      return new Promise(function(resolve, reject) {
+        var req = self._idbIndex.openKeyCursor(range, direction);
+
+        req.onsuccess = function(event) {
+          resolve(event.target.result);
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
+    },
+
+    get: function(key) {
+      var self = this;
+
+      return new Promise(function(resolve, reject) {
+        var req = self._idbIndex.get(key);
+
+        req.onsuccess = function(event) {
+          resolve(event.target.result);
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
+    },
+
+    getKey: function(key) {
+      var self = this;
+
+      return new Promise(function(resolve, reject) {
+        var req = self._idbIndex.getKey(key);
+
+        req.onsuccess = function(event) {
+          resolve(event.target.result);
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
+    },
+
+    count: function(key) {
+      var self = this;
+
+      return new Promise(function(resolve, reject) {
+        var req = key ? self._idbIndex.count(key) : self._idbIndex.count();
+
+        req.onsuccess = function(event) {
+          resolve(event.target.result);
+        };
+        req.onerror = function(event) {
+          reject(event);
+        };
+      });
+    }
+  };
 
 })(this);

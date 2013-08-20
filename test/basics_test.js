@@ -227,7 +227,7 @@ asyncTest('Index API - properties', function() {
 });
 
 asyncTest('Index API - requests', function() {
-  expect(11);
+  expect(13);
 
   EIDB.open('foo', 1, function(db) {
     var store = db.createObjectStore("people", {keyPath: "id"});
@@ -243,16 +243,31 @@ asyncTest('Index API - requests', function() {
     var tx = db.transaction('people');
     var index = tx.objectStore('people').index('by_name');
 
-    index.openCursor('Erik', 'prev').then(function(cursor) {
-      equal(cursor.key, 'Erik', "#openCursor range param is passed");
-      equal(cursor.direction, 'prev', "#openCursor direction param is passed");
-      ok('value' in cursor, "#openCursor provides a result value");
+    var res = [];
+    index.openCursor('Erik', 'prev', function(cursor, resolve) {
+      if (cursor && cursor.value.id === 1) {
+        equal(cursor.key, 'Erik', "#openCursor range param is passed");
+        equal(cursor.direction, 'prev', "#openCursor direction param is passed");
+        ok('value' in cursor, "#openCursor provides a result value");
+      }
+
+      if (cursor) {res.push(cursor.value); cursor.continue();} else {resolve(res);}
+    }).then(function(res) {
+      var expected = [{id:2, name: "Erik"}, {id: 1, name: "Erik"}];
+      deepEqual(res, expected, "#openCursor takes a function as a 3rd param that is used in the onsuccess callback");
     });
 
-    index.openKeyCursor('Erik', 'prev').then(function(cursor) {
-      equal(cursor.key, 'Erik', "#openKeyCursor range param is passed");
-      equal(cursor.direction, 'prev', "#openKeyCursor direction param is passed");
-      ok(!('value' in cursor), "#openKeyCursor doesn't provide a result value");
+    var _res = [];
+    index.openKeyCursor('Erik', 'prev', function(cursor, resolve) {
+      if (cursor && cursor.primaryKey === 2) {
+        equal(cursor.key, 'Erik', "#openKeyCursor range param is passed");
+        equal(cursor.direction, 'prev', "#openKeyCursor direction param is passed");
+        ok(!('value' in cursor), "#openKeyCursor doesn't provide a result value");
+      }
+
+      if (cursor) {_res.push(cursor.primaryKey); cursor.continue();} else {resolve(_res);}
+    }).then(function(res) {
+      deepEqual(res, [2,1], "#openKeyCursor takes a function as a 3rd param that is used in the onsuccess callback");
     });
 
     index.get('Erik').then(function(obj) {
@@ -272,7 +287,7 @@ asyncTest('Index API - requests', function() {
     })
 
     index.getAll('Erik').then(function(result) {
-      expected = [{id: 1, name: "Erik"}, {id:2, name: "Erik"}]
+      var expected = [{id: 1, name: "Erik"}, {id:2, name: "Erik"}];
       deepEqual(result, expected, "#getAll collects the #openCursor results");
     });
 

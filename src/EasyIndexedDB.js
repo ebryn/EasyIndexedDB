@@ -243,7 +243,7 @@
     this.keyPath = idbIndex.keyPath;
     this.multiEntry = idbIndex.multiEntry;
     this.unique = idbIndex.unique;
-  }
+  };
 
   Index.prototype = {
     _idbIndex: null,
@@ -253,7 +253,7 @@
     multiEntry: null,
     unique: null,
 
-    openCursor: function(range, direction) {
+    openCursor: function(range, direction, onsuccess) {
       var self = this;
       range = range || null;
       direction = direction || 'next';
@@ -262,7 +262,7 @@
         var req = self._idbIndex.openCursor(range, direction);
 
         req.onsuccess = function(event) {
-          resolve(event.target.result);
+          onsuccess(event.target.result, resolve);
         };
         req.onerror = function(event) {
           reject(event);
@@ -270,7 +270,7 @@
       });
     },
 
-    openKeyCursor: function(range, direction) {
+    openKeyCursor: function(range, direction, onsuccess) {
       var self = this;
       range = range || null;
       direction = direction || 'next';
@@ -279,7 +279,7 @@
         var req = self._idbIndex.openKeyCursor(range, direction);
 
         req.onsuccess = function(event) {
-          resolve(event.target.result);
+          onsuccess(event.target.result, resolve);
         };
         req.onerror = function(event) {
           reject(event);
@@ -333,26 +333,15 @@
     },
 
     getAll: function(range, direction) {
-      var self = this;
-      range = range || null;
-      direction = direction || 'next';
+      var res = [];
 
-      return new Promise(function(resolve, reject) {
-        var req = self._idbIndex.openCursor(range, direction);
-        var res = [];
-
-        req.onsuccess = function(event) {
-          var cursor = event.target.result;
-          if (cursor) {
-            res.push(cursor.value);
-            cursor.continue();
-          } else {
-            resolve(res);
-          }
-        };
-        req.onerror = function(event) {
-          reject(event);
-        };
+      return this.openCursor(range, direction, function(cursor, resolve) {
+        if (cursor) {
+          res.push(cursor.value);
+          cursor.continue();
+        } else {
+          resolve(res);
+        }
       });
     }
   };

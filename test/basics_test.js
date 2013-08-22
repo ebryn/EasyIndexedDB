@@ -60,12 +60,13 @@ asyncTest("creating an object store", function() {
   expect(2);
 
   EIDB.open("foo", 1, function(db) {
-    start();
     ok(db instanceof EIDB.Database, "Received an EIDB.Database object");
 
     var store = db.createObjectStore("people", { keyPath: "id" });
     ok(store instanceof EIDB.ObjectStore, "Received an EIDB.ObjectStore object");
 
+  }).then(function(db) {
+    start();
     db.close();
   });
 });
@@ -202,6 +203,7 @@ asyncTest('ObjectStore API - indexes', function() {
     ok(!store.indexNames.contains('by_name'), '#deleteIndex removes the index');
 
     store.createIndex('by_name', 'name', {unique: true});
+  }).then(function(db) {
     db.close();
 
     EIDB.open('foo', 2).then(function(db) {
@@ -227,6 +229,7 @@ asyncTest('Index API - properties', function() {
     ok(index.multiEntry, "multiEntry property is correct");
     ok(index.unique, 'unique property is correct');
 
+  }).then(function(db) {
     start();
     db.close();
   });

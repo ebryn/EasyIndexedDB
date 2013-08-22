@@ -47,10 +47,16 @@
 
   var Database = EIDB.Database = function(idbDatabase) {
     this._idbDatabase = idbDatabase;
+    this.name = idbDatabase.name;
+    this.version = idbDatabase.version;
+    this.objectStoreNames = idbDatabase.objectStoreNames;
   };
 
   Database.prototype = {
     _idbDatabase: null,
+    name: null,
+    version: null,
+    objectStoreNames: null,
 
     close: function() {
       return this._idbDatabase.close();

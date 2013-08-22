@@ -295,3 +295,19 @@ asyncTest('Index API - requests', function() {
     db.close();
   });
 });
+
+asyncTest("Database API - properties", function() {
+  expect(3);
+
+  EIDB.open('foo', 2, function(db) {
+    db.createObjectStore("people", { keyPath: "id" });
+  }).then(function(db) {
+
+    equal(db.name, 'foo', "EIDB.Database has name property");
+    equal(db.version, 2, "EIDB.Database has version property");
+    ok(db.objectStoreNames.contains('people'), "EIDB.Database has objectStoreNames property");
+
+    start();
+    db.close();
+  });
+});

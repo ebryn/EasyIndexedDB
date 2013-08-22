@@ -302,8 +302,8 @@ asyncTest('Index API - requests', function() {
   });
 });
 
-asyncTest("Database API - properties", function() {
-  expect(3);
+asyncTest("Database API", function() {
+  expect(4);
 
   EIDB.open('foo', 2, function(db) {
     db.createObjectStore("people", { keyPath: "id" });
@@ -312,6 +312,15 @@ asyncTest("Database API - properties", function() {
     equal(db.name, 'foo', "EIDB.Database has name property");
     equal(db.version, 2, "EIDB.Database has version property");
     ok(db.objectStoreNames.contains('people'), "EIDB.Database has objectStoreNames property");
+
+    db.close();
+  });
+
+  EIDB.open('foo', 3, function(db) {
+    db.deleteObjectStore('people');
+  }).then(function(db) {
+
+    ok(!db.objectStoreNames.contains('people'), "EIDB.Database can delete an object store");
 
     start();
     db.close();

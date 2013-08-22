@@ -65,6 +65,10 @@
       return new ObjectStore(this._idbDatabase.createObjectStore(name, options));
     },
 
+    deleteObjectStore: function(name) {
+      return this._idbDatabase.deleteObjectStore(name);
+    },
+
     transaction: function(objectStores, mode) {
       var tx;
 

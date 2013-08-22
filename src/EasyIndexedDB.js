@@ -15,10 +15,9 @@
 
   var EIDB = global.EIDB = {
     open: function(name, version, upgradeCallback) {
-      version = version || 1;
-
       return new Promise(function(resolve, reject) {
-        var req = indexedDB.open(name, version);
+        var req = version ? indexedDB.open(name, version) : indexedDB.open(name);
+
         req.onsuccess = function(event) {
           resolve(new Database(req.result));
         };

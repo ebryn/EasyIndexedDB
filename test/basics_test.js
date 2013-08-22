@@ -40,11 +40,17 @@ test("namespace exists", function() {
 });
 
 asyncTest("opening a database", function() {
-  expect(1);
+  expect(2);
 
-  EIDB.open("foo").then(function(db) {
-    start();
+  EIDB.open("foo", 2).then(function(db) {
     ok(db instanceof EIDB.Database, "Received an EIDB.Database object");
+
+    start();
+    db.close();
+  });
+
+  EIDB.open('foo').then(function(db) {
+    equal(db.version, 2, "Received the most recent database when no version param given");
 
     db.close();
   });
@@ -238,7 +244,7 @@ asyncTest('Index API - requests', function() {
     db.add('people', 3, {name: "Kris"});
     db.close();
 
-    return EIDB.open('foo');
+    return EIDB.open('foo', 1);
   }).then(function(db) {
     var tx = db.transaction('people');
     var index = tx.objectStore('people').index('by_name');

@@ -69,6 +69,10 @@
       return this._idbDatabase.deleteObjectStore(name);
     },
 
+    objectStore: function(name) {
+      return this.transactionFor(name).objectStore(name);
+    },
+
     transaction: function(objectStores, mode) {
       var tx;
 
@@ -97,8 +101,7 @@
     },
 
     add: function(objectStore, id, obj) {
-      var tx = this.transactionFor(objectStore),
-          store = tx.objectStore(objectStore),
+      var store = this.objectStore(objectStore),
           key = store.keyPath;
 
       obj[key] = id;
@@ -108,14 +111,12 @@
     },
 
     get: function(objectStore, id) {
-      var tx = this.transactionFor(objectStore),
-          store = tx.objectStore(objectStore);
+      var store = this.objectStore(objectStore);
       return store.get(id);
     },
 
     put: function(objectStore, id, obj) {
-      var tx = this.transactionFor(objectStore),
-          store = tx.objectStore(objectStore),
+      var store = this.objectStore(objectStore),
           key = store.keyPath;
 
       obj[key] = id;
@@ -123,9 +124,7 @@
     },
 
     "delete": function(objectStore, id) {
-      var tx = this.transactionFor(objectStore),
-          store = tx.objectStore(objectStore);
-      return store.delete(id);
+      return this.objectStore(objectStore).delete(id);
     }
   };
 

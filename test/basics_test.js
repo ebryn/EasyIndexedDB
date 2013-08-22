@@ -11,11 +11,11 @@ RSVP.configure('onerror', function(error) {
 // }
 
 function deleteDB(name, callback) {
-  console.log("attempting to delete DB", name);
+  // console.log("attempting to delete DB", name);
 
   var req = window.indexedDB.deleteDatabase(name);
   req.onsuccess = function (event) {
-    console.log("deleted DB", name);
+    // console.log("deleted DB", name);
     if (callback) { callback(event); }
   };
   req.onerror = function (event) {
@@ -306,7 +306,7 @@ asyncTest('Index API - requests', function() {
 });
 
 asyncTest("Database API", function() {
-  expect(4);
+  expect(5);
 
   EIDB.open('foo', 2, function(db) {
     db.createObjectStore("people", { keyPath: "id" });
@@ -315,6 +315,13 @@ asyncTest("Database API", function() {
     equal(db.name, 'foo', "EIDB.Database has name property");
     equal(db.version, 2, "EIDB.Database has version property");
     ok(db.objectStoreNames.contains('people'), "EIDB.Database has objectStoreNames property");
+
+    db.close();
+  });
+
+  EIDB.open('foo', 2).then(function(db) {
+    var store = db.objectStore('people');
+    ok(store instanceof EIDB.ObjectStore, "EIDB.Database can get an object store");
 
     db.close();
   });

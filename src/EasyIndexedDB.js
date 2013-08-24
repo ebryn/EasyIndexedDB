@@ -41,6 +41,14 @@
           reject(event);
         };
       });
+    },
+
+    version: function(dbName){
+      return this.open(dbName).then(function(db) {
+        var v = db.version;
+        db.close();
+        return v;
+      });
     }
   };
 

@@ -336,3 +336,16 @@ asyncTest("Database API", function() {
     db.close();
   });
 });
+
+asyncTest('EIDB API', function() {
+  expect(1);
+
+  EIDB.open('foo', 1).then(function(db) {
+    db.close();
+  });
+
+  EIDB.version('foo').then(function(version) {
+    equal(version, 1, 'EIDB.version result is correct');
+    start();
+  });
+});

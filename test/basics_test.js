@@ -338,22 +338,42 @@ asyncTest("Database API", function() {
 });
 
 asyncTest('EIDB API', function() {
+  if ('webkitGetDatabaseNames' in indexedDB)
+    expect(2);
+  else
+    expect(1);
+
   EIDB.open('foo', 1).then(function(db) {
     db.close();
-  });
+    return EIDB.version('foo');
+  }).then(function(version) {
 
-  EIDB.version('foo').then(function(version) {
     equal(version, 1, 'EIDB.version result is correct');
+
     start();
+    if ('webkitGetDatabaseNames' in indexedDB) {
+      EIDB.webkitGetDatabaseNames().then(function(names) {
+        ok(names.contains('foo'), "EIDB.webkitGetDatabaseNames returns a list of database names (Chrome)");
+      });
+    }
   });
+});
 
-  if ('webkitGetDatabaseNames' in indexedDB) {
-    expect(2);
+asyncTest('EIDB API - .bumpVersion', function() {
+  expect(3);
 
-    EIDB.webkitGetDatabaseNames().then(function(names) {
-      ok(names.contains('foo'), "EIDB.webkitGetDatabaseNames returns a list of database names (Chrome)");
-    });
-  } else {
-    expect(1);
-  }
+  EIDB.bumpVersion('foo', function(db) {
+    db.createObjectStore('bar');
+  }).then(function(db) {
+    equal(db.version, 2, 'EIDB.bumpVersion will start a new database at version 2');
+    ok(db.objectStoreNames.contains('bar'), "EIDB.bumpVersion takes a upgrade callback");
+    db.close();
+
+    return EIDB.bumpVersion('foo');
+  }).then(function(db) {
+    equal(db.version, 3, 'EIDB.bumpVersion will increase an existing database version by 1');
+
+    start();
+    db.close();
+  });
 });

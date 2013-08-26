@@ -45,9 +45,8 @@
 
     version: function(dbName){
       return this.open(dbName).then(function(db) {
-        var v = db.version;
         db.close();
-        return v;
+        return db.version;
       });
     },
 
@@ -61,6 +60,16 @@
         req.onerror = function(evt) {
           reject(evt);
         };
+      });
+    },
+
+    bumpVersion: function(dbName, upgradeCallback) {
+      return EIDB.open(dbName).then(function(db) {
+        db.close();
+
+        return EIDB.open(dbName, db.version + 1, function(db) {
+          if (upgradeCallback) { upgradeCallback(db); }
+        });
       });
     }
   };

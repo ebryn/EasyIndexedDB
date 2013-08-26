@@ -49,6 +49,19 @@
         db.close();
         return v;
       });
+    },
+
+    webkitGetDatabaseNames: function() {
+      var req = indexedDB.webkitGetDatabaseNames();
+
+      return new RSVP.Promise(function(resolve, reject) {
+        req.onsuccess = function(evt) {
+          resolve(evt.target.result);
+        };
+        req.onerror = function(evt) {
+          reject(evt);
+        };
+      });
     }
   };
 

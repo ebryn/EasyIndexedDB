@@ -338,8 +338,6 @@ asyncTest("Database API", function() {
 });
 
 asyncTest('EIDB API', function() {
-  expect(1);
-
   EIDB.open('foo', 1).then(function(db) {
     db.close();
   });
@@ -348,4 +346,14 @@ asyncTest('EIDB API', function() {
     equal(version, 1, 'EIDB.version result is correct');
     start();
   });
+
+  if ('webkitGetDatabaseNames' in indexedDB) {
+    expect(2);
+
+    EIDB.webkitGetDatabaseNames().then(function(names) {
+      ok(names.contains('foo'), "EIDB.webkitGetDatabaseNames returns a list of database names (Chrome)");
+    });
+  } else {
+    expect(1);
+  }
 });

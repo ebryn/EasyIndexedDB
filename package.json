@@ -1,0 +1,28 @@
+{
+  "name": "EasyIndexedDB",
+  "version": "0.0.0",
+  "description": "An IndexedDB wrapper that exposes a promise-based API where possible",
+  "main": "dist/commonjs/main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ebryn/EasyIndexedDB.git"
+  },
+  "bugs": {
+    "url":"https://github.com/ebryn/EasyIndexedDB/issues"
+  },
+  "keywords": [
+    "IndexedDB",
+    "promises"
+  ],
+  "dependencies": {
+    "rsvp": "~2.0.2"
+  },
+  "devDependencies": {
+    "grunt": "0.4.1",
+    "grunt-microlib": "git://github.com/thomasboyt/grunt-microlib.git"
+  },
+  "license": "MIT"
+}

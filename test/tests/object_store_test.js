@@ -3,41 +3,32 @@ asyncTest("adding, getting, putting, and removing a record", function() {
   expect(6);
 
   EIDB.open("foo", 1, function(db) {
-    start();
-    var store = db.createObjectStore("people", { keyPath: "id" });
+    db.createObjectStore("people", { keyPath: "id" });
   }).then(function(db) {
     var tx = db.transaction(["people"], "readwrite"),
         store = tx.objectStore("people");
 
     var req = store.add({id: 1, name: "Erik"});
-    stop();
+
     req.then(function(event) {
-      start();
       ok(event, "Event was passed in when resolved");
 
-      stop();
       store.get(1).then(function(obj) {
-        start();
 
         equal(obj.id, 1);
         equal(obj.name, "Erik");
 
-        stop();
         obj.name = "Kris";
         store.put(obj).then(function(obj) {
-          start();
-
           equal(obj.id, 1);
           equal(obj.name, "Kris");
+
+          start();
         });
       });
 
-      stop();
       store.delete(1).then(function(event) {
-        start();
         ok(event, "Event was passed in when resolved");
-
-        db.close();
       });
     });
   });
@@ -66,13 +57,11 @@ asyncTest('ObjectStore - indexes', function() {
 
     store.createIndex('by_name', 'name', {unique: true});
   }).then(function(db) {
-    db.close();
 
     EIDB.open('foo', 2).then(function(db) {
       var store = db.transaction('people').objectStore('people');
       ok(store.indexNames.contains('by_name'), "new store object finds an existing index");
 
-      db.close();
       start();
     });
   });
@@ -87,15 +76,11 @@ asyncTest('ObjectStore - properties', function() {
     equal(store.name, 'people', "name is correct");
     equal(store.keyPath, 'id', "keyPath is correct");
 
-    db.close();
-
     return EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true});
   }).then(function(db) {
     var store = db.objectStore('dogs');
-
     ok(store.autoIncrement, "autoIncrement is correct");
 
-    db.close();
     start();
   });
 });

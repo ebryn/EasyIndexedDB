@@ -43,7 +43,7 @@ asyncTest("adding, getting, putting, and removing a record", function() {
   });
 });
 
-asyncTest('ObjectStore API - indexes', function() {
+asyncTest('ObjectStore - indexes', function() {
   expect(7);
 
   EIDB.open('foo', 1, function(db) {
@@ -75,5 +75,27 @@ asyncTest('ObjectStore API - indexes', function() {
       db.close();
       start();
     });
+  });
+});
+
+asyncTest('ObjectStore - properties', function() {
+  expect(3);
+
+  EIDB.createObjectStore('foo', 'people', {keyPath: 'id'}).then(function(db) {
+    var store = db.objectStore('people');
+
+    equal(store.name, 'people', "name is correct");
+    equal(store.keyPath, 'id', "keyPath is correct");
+
+    db.close();
+
+    return EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true});
+  }).then(function(db) {
+    var store = db.objectStore('dogs');
+
+    ok(store.autoIncrement, "autoIncrement is correct");
+
+    db.close();
+    start();
   });
 });

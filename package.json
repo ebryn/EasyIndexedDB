@@ -22,7 +22,10 @@
   },
   "devDependencies": {
     "grunt": "0.4.1",
-    "grunt-microlib": "git://github.com/thomasboyt/grunt-microlib.git"
+    "grunt-microlib": "git://github.com/thomasboyt/grunt-microlib.git",
+    "karma": "~0.9.4",
+    "grunt-karma": "~0.5",
+    "karma-qunit": "~0.0.3"
   },
   "license": "MIT"
 }

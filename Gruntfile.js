@@ -1,8 +1,13 @@
 module.exports = function(grunt) {
-  grunt.registerTask('watchbuild', 'Rebuild files on file save', ['watch:build']);
-  var microlibConfig = require('grunt-microlib').init.bind(this)(grunt);
-  grunt.loadNpmTasks('grunt-microlib');
+  grunt.registerTask('test:server', 'Autorun tests on ChromeCanary',
+                     ['build', 'concat:tests', 'karma:server', 'watch:test']);
+  grunt.registerTask('test:all', 'Run tests once on ChromeCanary, Chrome and Firefox',
+                     ['build', 'concat:tests', 'karma:multiple']);
 
+  grunt.loadNpmTasks('grunt-microlib');
+  grunt.loadNpmTasks('grunt-karma');
+
+  var microlibConfig = require('grunt-microlib').init.bind(this)(grunt);
   var config = {
     pkg: grunt.file.readJSON('package.json'),
     env: process.env,
@@ -17,7 +22,33 @@ module.exports = function(grunt) {
       build: {
         files: ['lib/**'],
         tasks: ['build']
+      },
+      test: {
+        files: ['lib/**', 'test/**'],
+        tasks: ['build', 'concat:tests', 'karma:server:run']
       }
+    },
+
+    concat: {
+      tests: {
+        src: ['test/test_helper.js','test/tests/**.js'],
+        dest: 'tmp/tests-bundle.js'
+      }
+    },
+
+    karma: {
+      options: {
+        configFile: 'karma.conf.js',
+        reporters: ['coverage', 'dots'],
+        browsers: ['ChromeCanary']
+      },
+      multiple: {
+        singleRun: true,
+        browsers: ['ChromeCanary', 'Chrome', 'Firefox']
+      },
+      server: {
+        background: true
+      },
     }
   };
 

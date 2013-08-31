@@ -11,9 +11,7 @@ asyncTest('Index API - properties', function() {
     ok(index.multiEntry, "multiEntry property is correct");
     ok(index.unique, 'unique property is correct');
 
-  }).then(function(db) {
     start();
-    db.close();
   });
 });
 
@@ -27,7 +25,6 @@ asyncTest('Index API - requests', function() {
     db.add('people', 1, {name: "Erik"});
     db.add('people', 2, {name: "Erik"});
     db.add('people', 3, {name: "Kris"});
-    db.close();
 
     return EIDB.open('foo', 1);
   }).then(function(db) {
@@ -83,6 +80,5 @@ asyncTest('Index API - requests', function() {
     });
 
     start();
-    db.close();
   });
 });

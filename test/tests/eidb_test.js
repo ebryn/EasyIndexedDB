@@ -5,13 +5,10 @@ asyncTest("EIDB.open", function() {
     ok(db instanceof EIDB.Database, "Received an EIDB.Database object");
 
     start();
-    db.close();
   });
 
   EIDB.open('foo').then(function(db) {
     equal(db.version, 2, "Received the most recent database when no version param given");
-
-    db.close();
   });
 });
 
@@ -22,7 +19,6 @@ asyncTest('EIDB API', function() {
     expect(1);
 
   EIDB.open('foo', 1).then(function(db) {
-    db.close();
     return EIDB.version('foo');
   }).then(function(version) {
 
@@ -45,14 +41,12 @@ asyncTest('EIDB.bumpVersion', function() {
   }).then(function(db) {
     equal(db.version, 2, 'EIDB.bumpVersion will start a new database at version 2');
     ok(db.objectStoreNames.contains('bar'), "EIDB.bumpVersion takes a upgrade callback");
-    db.close();
 
     return EIDB.bumpVersion('foo');
   }).then(function(db) {
     equal(db.version, 3, 'EIDB.bumpVersion will increase an existing database version by 1');
 
     start();
-    db.close();
   });
 });
 
@@ -66,7 +60,6 @@ asyncTest('EIDB.createObjectStore', function() {
     ok(db.objectStoreNames.contains('dogs'), "The store is created");
     ok(store.autoIncrement, "Store options are passed");
 
-    db.close();
     start();
   });
 });
@@ -75,13 +68,10 @@ asyncTest('EIDB.deleteObjectStore', function() {
   expect(1);
 
   EIDB.createObjectStore('foo', 'dogs').then(function(db) {
-    db.close();
-
     return EIDB.deleteObjectStore('foo', 'dogs');
   }).then(function(db) {
     ok(!db.objectStoreNames.contains('dogs'), "Deletes the store");
 
-    db.close();
     start();
   });
 });

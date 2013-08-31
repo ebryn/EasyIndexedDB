@@ -1,4 +1,4 @@
-asyncTest("EIDB API - .open", function() {
+asyncTest("EIDB.open", function() {
   expect(2);
 
   EIDB.open("foo", 2).then(function(db) {
@@ -37,7 +37,7 @@ asyncTest('EIDB API', function() {
   });
 });
 
-asyncTest('EIDB API - .bumpVersion', function() {
+asyncTest('EIDB.bumpVersion', function() {
   expect(3);
 
   EIDB.bumpVersion('foo', function(db) {
@@ -53,5 +53,35 @@ asyncTest('EIDB API - .bumpVersion', function() {
 
     start();
     db.close();
+  });
+});
+
+asyncTest('EIDB.createObjectStore', function() {
+  expect(3);
+
+  EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true}).then(function(db) {
+    var store = db.objectStore('dogs');
+
+    equal(db.name, 'foo', "The correct database is used");
+    ok(db.objectStoreNames.contains('dogs'), "The store is created");
+    ok(store.autoIncrement, "Store options are passed");
+
+    db.close();
+    start();
+  });
+});
+
+asyncTest('EIDB.deleteObjectStore', function() {
+  expect(1);
+
+  EIDB.createObjectStore('foo', 'dogs').then(function(db) {
+    db.close();
+
+    return EIDB.deleteObjectStore('foo', 'dogs');
+  }).then(function(db) {
+    ok(!db.objectStoreNames.contains('dogs'), "Deletes the store");
+
+    db.close();
+    start();
   });
 });

@@ -1,16 +1,28 @@
+asyncTest('ObjectStore - properties', function() {
+  expect(3);
 
-asyncTest("adding, getting, putting, and removing a record", function() {
+  EIDB.createObjectStore('foo', 'people', {keyPath: 'id'}).then(function(db) {
+    var store = db.objectStore('people');
+
+    equal(store.name, 'people', "name is correct");
+    equal(store.keyPath, 'id', "keyPath is correct");
+
+    return EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true});
+  }).then(function(db) {
+    var store = db.objectStore('dogs');
+    ok(store.autoIncrement, "autoIncrement is correct");
+
+    start();
+  });
+});
+
+asyncTest("ObjectStore - CRUD records", function() {
   expect(6);
 
-  EIDB.open("foo", 1, function(db) {
-    db.createObjectStore("people", { keyPath: "id" });
-  }).then(function(db) {
-    var tx = db.transaction(["people"], "readwrite"),
-        store = tx.objectStore("people");
+  EIDB.createObjectStore('foo', "people", { keyPath: "id" }).then(function(db) {
+    var store = db.objectStore("people");
 
-    var req = store.add({id: 1, name: "Erik"});
-
-    req.then(function(event) {
+    store.add({id: 1, name: "Erik"}).then(function(event) {
       ok(event, "Event was passed in when resolved");
 
       store.get(1).then(function(obj) {
@@ -67,20 +79,49 @@ asyncTest('ObjectStore - indexes', function() {
   });
 });
 
-asyncTest('ObjectStore - properties', function() {
-  expect(3);
+asyncTest('ObjectStore#openCursor, #count,  #clear', function() {
+  expect(6);
 
   EIDB.createObjectStore('foo', 'people', {keyPath: 'id'}).then(function(db) {
-    var store = db.objectStore('people');
+    db.add('people', 1, {name: "Erik"});
+    db.add('people', 2, {name: "Erik"});
+    db.add('people', 3, {name: "Kris"});
 
-    equal(store.name, 'people', "name is correct");
-    equal(store.keyPath, 'id', "keyPath is correct");
-
-    return EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true});
+    return EIDB.open('foo');
   }).then(function(db) {
-    var store = db.objectStore('dogs');
-    ok(store.autoIncrement, "autoIncrement is correct");
+    var store = db.objectStore('people'),
+        res = [];
+    store.openCursor(1, 'prev', function(cursor, resolve) {
+      if (cursor && cursor.value.id === 1) {
 
-    start();
+        equal(cursor.key, 1, "#openCursor range param is passed");
+        equal(cursor.direction, 'prev', "#openCursor direction param is passed");
+        ok('value' in cursor, "#openCursor provides a result value");
+      }
+
+      if (cursor) {res.push(cursor.value); cursor.continue();} else {resolve(res);}
+    }).then(function(res) {
+      var expected = [{id:1, name: "Erik"}];
+
+      deepEqual(res, expected, "#openCursor takes a function as a 3rd param that is used in the onsuccess callback");
+
+      return EIDB.open('foo', null, null, true);
+    }).then(function(db) {
+      var store = db.objectStore('people');
+      store.count().then(function(count) {
+
+        equal(count, 3, "#count gets the number of records in the store");
+
+        store.clear().then(function() {
+          return store.count();
+        }).then(function(count) {
+
+          equal(count, 0, "#clear removes all records from the store");
+
+          db.close();
+          start();
+        });
+      });
+    });
   });
 });

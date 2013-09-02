@@ -90,8 +90,8 @@ asyncTest('ObjectStore - indexes', function() {
   });
 });
 
-asyncTest('ObjectStore#openCursor, #count,  #clear', function() {
-  expect(6);
+asyncTest('ObjectStore#openCursor, #getAll, #count,  #clear', function() {
+  expect(7);
 
   EIDB.createObjectStore('foo', 'people', {keyPath: 'id'}).then(function(db) {
     db.add('people', 1, {name: "Erik"});
@@ -116,22 +116,25 @@ asyncTest('ObjectStore#openCursor, #count,  #clear', function() {
 
       deepEqual(res, expected, "#openCursor takes a function as a 3rd param that is used in the onsuccess callback");
 
-      return EIDB.open('foo', null, null, true);
-    }).then(function(db) {
-      var store = db.objectStore('people');
-      store.count().then(function(count) {
+      return store.getAll(null, 'prev');
+    }).then(function(res) {
+      var expected = [{id: 3, name: "Kris"}, {id: 2, name: "Erik"}, {id: 1, name: "Erik"}];
 
-        equal(count, 3, "#count gets the number of records in the store");
+      deepEqual(res, expected, "#getAll collects the #openCursor results");
 
-        store.clear().then(function() {
-          return store.count();
-        }).then(function(count) {
+      return store.count();
+    }).then(function(count) {
 
-          equal(count, 0, "#clear removes all records from the store");
+      equal(count, 3, "#count gets the number of records in the store");
 
-          db.close();
-          start();
-        });
+      store.clear().then(function() {
+        return store.count();
+      }).then(function(count) {
+
+        equal(count, 0, "#clear removes all records from the store");
+
+        db.close();
+        start();
       });
     });
   });

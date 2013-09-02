@@ -6,7 +6,7 @@ asyncTest('Index API - properties', function() {
     var index = store.createIndex('by_name', 'name', {unique: true, multiEntry: true });
 
     equal(index.name, 'by_name', "name property is correct");
-    equal(index.objectStore, index._idbIndex.objectStore, "objectStore property is correct");
+    equal(index.objectStore, store, "objectStore property is correct");
     equal(index.keyPath, 'name', "keyPath property is correct");
     ok(index.multiEntry, "multiEntry property is correct");
     ok(index.unique, 'unique property is correct');

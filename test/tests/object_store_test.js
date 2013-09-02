@@ -17,7 +17,7 @@ asyncTest('ObjectStore - properties', function() {
 });
 
 asyncTest("ObjectStore - CRUD records", function() {
-  expect(8);
+  expect(7);
 
   EIDB.createObjectStore('foo', "people", { keyPath: "id" }).then(function(db) {
     var store = db.objectStore("people");
@@ -31,10 +31,8 @@ asyncTest("ObjectStore - CRUD records", function() {
         equal(obj.name, "Erik");
 
         obj.name = "Kris";
-        store.put(obj).then(function(obj) {
-          equal(obj.id, 1);
-          equal(obj.name, "Kris");
-
+        store.put(obj).then(function(key) {
+          equal(key, 1);
         });
       });
 

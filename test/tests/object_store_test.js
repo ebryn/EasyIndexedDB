@@ -139,3 +139,26 @@ asyncTest('ObjectStore#openCursor, #getAll, #count,  #clear', function() {
     });
   });
 });
+
+asyncTest("ObjectStore#insertWith_key", function() {
+  expect(2);
+
+  EIDB.createObjectStore('foo', 'bar').then(function(db) {
+    var store = db.objectStore('bar');
+    return store.insertWith_key('add', {name: 'baz'}).then(function(key) {
+      return store.get(key);
+    }).then(function(obj) {
+
+      equal(obj._key, 1, "#insertWith_key will #add an out-of-line key store object and then #put a _key property which is the interal key");
+
+      return store.insertWith_key('add', {name: 'quz'}, 6).then(function(key) {
+        return store.get(key);
+      });
+    }).then(function(obj) {
+
+      equal(obj._key, 6, "#insertWith_key accepts a key argument to generate the _key property");
+
+      start();
+    });
+  });
+});

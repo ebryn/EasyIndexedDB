@@ -116,9 +116,9 @@ asyncTest("EIDB CRUD records", function() {
     deepEqual(obj, {id: 1, name: 'Juanita'}, "#putRecord updates an existing record");
 
     return EIDB.deleteRecord('foo', 'people', 1);
-  }).then(function(evt) {
+  }).then(function(res) {
 
-    ok(evt, '#deleteRecord returns an event');
+    equal(res, undefined, "#deleteRecord returns undefined");
 
     records = [{id: 2, name: 'Olaf'}, {id: 3, name: 'Klaus'}];
     return EIDB.addRecord('foo', 'people', records);

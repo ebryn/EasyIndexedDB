@@ -111,9 +111,9 @@ asyncTest("EIDB CRUD records", function() {
     equal(obj.name, 'Erik', "#getRecord retrieves the record");
 
     return EIDB.putRecord('foo', 'people', {id: 1, name: 'Juanita'});
-  }).then(function(obj) {
+  }).then(function(key) {
 
-    deepEqual(obj, {id: 1, name: 'Juanita'}, "#putRecord updates an existing record");
+    deepEqual(key, 1, "#putRecord updates an existing record");
 
     return EIDB.deleteRecord('foo', 'people', 1);
   }).then(function(res) {
@@ -130,7 +130,7 @@ asyncTest("EIDB CRUD records", function() {
     return EIDB.putRecord('foo', 'people', records);
   }).then(function(objs) {
 
-    deepEqual(objs, records, "#putRecord can take an array of records and returns the objects");
+    deepEqual(objs, [2, 3], "#putRecord can take an array of records and returns the record keys");
 
     start();
   });

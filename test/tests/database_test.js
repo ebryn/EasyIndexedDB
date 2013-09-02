@@ -32,7 +32,7 @@ asyncTest("Database API", function() {
 });
 
 asyncTest("Database - CRUD records", function() {
-  expect(8);
+  expect(7);
 
   EIDB.open("foo", 1, function(db) {
     db.createObjectStore("people", { keyPath: "myId" });
@@ -50,15 +50,14 @@ asyncTest("Database - CRUD records", function() {
 
       obj.name = "Kris";
       return db.put("people", 1, obj);
-    }).then(function(obj) {
+    }).then(function(key) {
 
-      equal(obj.myId, 1, "obj from put is correct");
-      equal(obj.name, "Kris", "obj from put is correct");
+      equal(key, 1, "#put returns the record's key");
 
-      return db.put("people", 2, obj);
-    }).then(function(obj) {
+      return db.put("people", 2, {name: "Kenny"});
+    }).then(function(key) {
 
-      equal(obj.myId, 2, "obj from put has correct key path");
+      equal(key, 2, "#put can add a new record");
 
       return db.delete("people", 1);
     }).then(function(res) {

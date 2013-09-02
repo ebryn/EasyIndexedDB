@@ -61,9 +61,9 @@ asyncTest("Database - CRUD records", function() {
       equal(obj.myId, 2, "obj from put has correct key path");
 
       return db.delete("people", 1);
-    }).then(function(event) {
+    }).then(function(res) {
 
-      ok(event, "Event was passed in when resolved");
+      equal(res, undefined, "#delete returns undefined");
 
       db.close();
       start();

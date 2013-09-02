@@ -38,8 +38,8 @@ asyncTest("ObjectStore - CRUD records", function() {
         });
       });
 
-      store.delete(1).then(function(event) {
-        ok(event, "Event was passed in when resolved");
+      store.delete(1).then(function(res) {
+        equal(res, undefined, "#delete returns undefined");
       });
     });
 

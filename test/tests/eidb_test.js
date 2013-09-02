@@ -93,3 +93,45 @@ asyncTest('EIDB.createIndex', function() {
     start();
   });
 });
+
+asyncTest("EIDB CRUD records", function() {
+  expect(6);
+
+  var records;
+
+  EIDB.createObjectStore("foo", "people", {keyPath: "id"}).then(function() {
+    return EIDB.addRecord("foo", "people", {id: 1, name: "Erik"});
+  }).then(function(key) {
+
+    equal(key, 1, "#addRecord returns the record's key");
+
+    return EIDB.getRecord('foo', 'people', 1);
+  }).then(function(obj) {
+
+    equal(obj.name, 'Erik', "#getRecord retrieves the record");
+
+    return EIDB.putRecord('foo', 'people', {id: 1, name: 'Juanita'});
+  }).then(function(obj) {
+
+    deepEqual(obj, {id: 1, name: 'Juanita'}, "#putRecord updates an existing record");
+
+    return EIDB.deleteRecord('foo', 'people', 1);
+  }).then(function(evt) {
+
+    ok(evt, '#deleteRecord returns an event');
+
+    records = [{id: 2, name: 'Olaf'}, {id: 3, name: 'Klaus'}];
+    return EIDB.addRecord('foo', 'people', records);
+  }).then(function(keys) {
+
+    deepEqual(keys, [2, 3], "#addRecord can take an array of records and returns the record keys");
+
+    records = [{id: 2, name: 'Hakim'}, {id: 3, name: 'Gizmo'}];
+    return EIDB.putRecord('foo', 'people', records);
+  }).then(function(objs) {
+
+    deepEqual(objs, records, "#putRecord can take an array of records and returns the objects");
+
+    start();
+  });
+});

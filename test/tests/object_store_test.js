@@ -17,13 +17,13 @@ asyncTest('ObjectStore - properties', function() {
 });
 
 asyncTest("ObjectStore - CRUD records", function() {
-  expect(6);
+  expect(8);
 
   EIDB.createObjectStore('foo', "people", { keyPath: "id" }).then(function(db) {
     var store = db.objectStore("people");
 
-    store.add({id: 1, name: "Erik"}).then(function(event) {
-      ok(event, "Event was passed in when resolved");
+    store.add({id: 1, name: "Erik"}).then(function(key) {
+      equal(key, 1, "#add returns the key of the record");
 
       store.get(1).then(function(obj) {
 
@@ -35,13 +35,26 @@ asyncTest("ObjectStore - CRUD records", function() {
           equal(obj.id, 1);
           equal(obj.name, "Kris");
 
-          start();
         });
       });
 
       store.delete(1).then(function(event) {
         ok(event, "Event was passed in when resolved");
       });
+    });
+
+    return EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true});
+  }).then(function(db) {
+    var store = db.objectStore('dogs');
+
+    store.add({name: 'Fido'}, 6).then(function(key) {
+      equal(key, 6, "#add can accept out-of-line keys");
+
+      start();
+    });
+
+    store.add({name: 'Spot'}).then(function(key) {
+      equal(key, 7, "#add auto increments records with no specified key");
     });
   });
 });

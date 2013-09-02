@@ -36,7 +36,7 @@ asyncTest("Database - CRUD records", function() {
 
   EIDB.open("foo", 1, function(db) {
     db.createObjectStore("people", { keyPath: "myId" });
-  }, true).then(function(db) {
+  }, {keepOpen: true}).then(function(db) {
     db.add("people", 1, {name: "Erik"}).then(function(obj) {
 
       equal(obj.myId, 1, "obj from add is correct");

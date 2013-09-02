@@ -50,15 +50,20 @@ asyncTest('EIDB.bumpVersion', function() {
 });
 
 asyncTest('EIDB.createObjectStore', function() {
-  expect(3);
+  expect(4);
 
-  EIDB.createObjectStore('foo', 'dogs', {autoIncrement: true}).then(function(db) {
+  EIDB.createObjectStore('foo', 'dogs', {keyPath: 'id'}).then(function(db) {
     var store = db.objectStore('dogs');
 
     equal(db.name, 'foo', "The correct database is used");
     ok(db.objectStoreNames.contains('dogs'), "The store is created");
-    ok(store.autoIncrement, "Store options are passed");
+    equal(store.keyPath, 'id', "Store options are passed");
 
+    return EIDB.createObjectStore('foo', 'cats');
+  }).then(function(db) {
+    var store = db.objectStore('cats');
+
+    ok(store.autoIncrement, "If no options are passed, autoIncrement is true");
     start();
   });
 });
@@ -132,6 +137,27 @@ asyncTest("EIDB CRUD records", function() {
 
     deepEqual(objs, [2, 3], "#putRecord can take an array of records and returns the record keys");
 
+    start();
+  });
+});
+
+asyncTest('EIDB.getAll', function() {
+  expect(2);
+
+  var records = [{name: "Ronny"}, {name: "Bobby"}, {name: "Ricky"}, {name: "Mike"}];
+
+  EIDB.createObjectStore('foo', 'new_edition').then(function(db) {
+    return EIDB.addRecord('foo', 'new_edition', records);
+  }).then(function() {
+    return EIDB.getAll('foo', 'new_edition');
+  }).then(function(res) {
+
+    deepEqual(res, records, "#getAll gets the stores records");
+
+    return EIDB.getAll('foo', 'new_edition', null, 'prev');
+  }).then(function(res) {
+
+    deepEqual(res, records.reverse(), "#getAll accepts a direction argument");
     start();
   });
 });

@@ -99,8 +99,8 @@ asyncTest('EIDB.createIndex', function() {
   });
 });
 
-asyncTest("EIDB CRUD records", function() {
-  expect(11);
+asyncTest("EIDB CRUD records - in-line keys", function() {
+  expect(6);
 
   var records;
 
@@ -137,9 +137,12 @@ asyncTest("EIDB CRUD records", function() {
 
     deepEqual(objs, [2, 3], ".putRecord can take an array of records and returns the record keys");
 
-    return EIDB.createObjectStore('foo', 'pets');
-  }).then(function(db) {
+    start();
+  });
+});
 
+asyncTest("EIDB CRUD records - out-of-line keys", function() {
+  EIDB.createObjectStore('foo', 'pets').then(function(db) {
     return EIDB.addRecord('foo', 'pets', {name: 'Frank'}, 4).then(function() {
       return EIDB.addRecord('foo', 'pets', {name: 'Fido'});
     });

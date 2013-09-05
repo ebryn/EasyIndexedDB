@@ -143,22 +143,39 @@ asyncTest('ObjectStore#openCursor, #getAll, #count,  #clear', function() {
 asyncTest("ObjectStore#insertWith_key", function() {
   expect(2);
 
-  EIDB.createObjectStore('foo', 'bar').then(function(db) {
-    var store = db.objectStore('bar');
-    return store.insertWith_key('add', {name: 'baz'}).then(function(key) {
-      return store.get(key);
-    }).then(function(obj) {
-
-      equal(obj._key, 1, "#insertWith_key will #add an out-of-line key store object and then #put a _key property which is the interal key");
-
-      return store.insertWith_key('add', {name: 'quz'}, 6).then(function(key) {
-        return store.get(key);
-      });
-    }).then(function(obj) {
-
-      equal(obj._key, 6, "#insertWith_key accepts a key argument to generate the _key property");
-
-      start();
+  // TransactionInactiveError...
+  // Simulate this error which occurs when using EIDB in Ember.
+  // Otherwise, the error won't occur in the testing environment.
+  EIDB.__instrument__.setup = function(method) {
+    return new RSVP.Promise(function(resolve, reject) {
+      setTimeout(function() {
+        resolve(method());
+      }, 1);
     });
+  };
+
+  EIDB.open('foo', null, function(db) {
+    db.createObjectStore('bar', {autoIncrement: true});
+  }, {keepOpen: true}).then(function(db) {
+    var store = db.objectStore('bar');
+
+    return store.insertWith_key('add', {name: 'baz'}, null, db).then(function(key) {
+      return EIDB.getRecord('foo', 'bar', key);
+    });
+  }).then(function(obj) {
+
+    equal(obj._key, 1, "#insertWith_key will #add an out-of-line key store object and then #put a _key property which is the interal key");
+
+    return EIDB.open('foo', null, null, {keepOpen: true});
+  }).then(function(_db) {
+    var store = _db.objectStore('bar');
+    return store.insertWith_key('add', {name: 'quz'}, 6, _db).then(function(_key) {
+      return EIDB.getRecord('foo', 'bar', _key);
+    });
+  }).then(function(obj) {
+
+    equal(obj._key, 6, "#insertWith_key accepts a key argument to generate the _key property");
+
+    start();
   });
 });

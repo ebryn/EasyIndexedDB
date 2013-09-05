@@ -22,9 +22,35 @@ if ('webkitGetDatabaseNames' in indexedDB) {
   asyncTest('EIDB.webkitGetDatabaseNames', function() {
     expect(1);
 
-    EIDB.open('foo', 1).then(function(db) {
+    EIDB.open('foo').then(function(db) {
       EIDB.webkitGetDatabaseNames().then(function(names) {
         ok(names.contains('foo'), "EIDB.webkitGetDatabaseNames returns a list of database names (Chrome)");
+
+        start();
+      });
+    });
+  });
+
+  asyncTest('EIDB.getDatabaseNames', function() {
+    expect(1);
+
+    EIDB.open('foo').then(function(db) {
+      EIDB.getDatabaseNames().then(function(names) {
+        ok(names.contains('foo'), "EIDB.getDatabaseNames returns a list of database names (Chrome)");
+
+        start();
+      });
+    });
+  });
+}
+
+if (!('webkitGetDatabaseNames' in indexedDB)) {
+  asyncTest('EIDB.getDatabaseNames', function() {
+    expect(1);
+
+    EIDB.open('foo').then(function(db) {
+      EIDB.getDatabaseNames().then(function(names) {
+        deepEqual(names, [], "EIDB.getDatabaseNames returns an empty array in unsupported browsers");
 
         start();
       });

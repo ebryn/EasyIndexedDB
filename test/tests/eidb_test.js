@@ -42,18 +42,57 @@ if ('webkitGetDatabaseNames' in indexedDB) {
       });
     });
   });
+
+  asyncTest('EIDB.openOnly (.getDatabaseNames is supported)', function() {
+    expect(5);
+
+    EIDB.openOnly('foo').then(function(res) {
+
+      ok(res === null, ".openOnly returns null if the database does not exist");
+
+      return EIDB.open('foo', 1).then(function() {
+        return EIDB.openOnly('foo');
+      });
+    }).then(function(db) {
+
+      equal(db.name, 'foo', ".openOnly returns the database with the correct name");
+      equal(db.version, 1, ".openOnly returns the databse with the correct version");
+
+      return EIDB.openOnly('foo', 2);
+    }).then(function(res) {
+
+      ok(res === null, ".openOnly returns null if requesting a version higher than the current");
+
+      return EIDB.openOnly('foo', 1);
+    }).then(function(res) {
+
+      equal(res.version, 1, ".openOnly attempts to return the requested database version when it is lower than the current");
+
+      start();
+    });
+  });
 }
 
 if (!('webkitGetDatabaseNames' in indexedDB)) {
-  asyncTest('EIDB.getDatabaseNames', function() {
+  asyncTest('.getDatabaseNames', function() {
     expect(1);
 
     EIDB.open('foo').then(function(db) {
       EIDB.getDatabaseNames().then(function(names) {
-        deepEqual(names, [], "EIDB.getDatabaseNames returns an empty array in unsupported browsers");
+        deepEqual(names, [], ".getDatabaseNames returns an empty array in unsupported browsers");
 
         start();
       });
+    });
+  });
+
+  asyncTest('EIDB.openOnly (.getDatabaseNames is not supported)', function() {
+    expect(1);
+
+    EIDB.openOnly('foo', 6).then(function(db) {
+
+      equal(db.version, 6, ".openOnly acts like .open");
+      start();
     });
   });
 }

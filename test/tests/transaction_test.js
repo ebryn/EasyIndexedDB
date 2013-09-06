@@ -1,4 +1,4 @@
-asyncTest("creating a transaction", function() {
+asyncTest("EIDB.Transaction", function() {
   expect(2);
 
   EIDB.open("foo", 1, function(db) {

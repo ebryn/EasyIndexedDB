@@ -33,6 +33,7 @@ asyncTest('Index API - requests', function() {
 
     var res = [];
     index.openCursor('Erik', 'prev', function(cursor, resolve) {
+
       if (cursor && cursor.value.id === 1) {
         equal(cursor.key, 'Erik', "#openCursor range param is passed");
         equal(cursor.direction, 'prev', "#openCursor direction param is passed");
@@ -43,10 +44,13 @@ asyncTest('Index API - requests', function() {
     }).then(function(res) {
       var expected = [{id:2, name: "Erik"}, {id: 1, name: "Erik"}];
       deepEqual(res, expected, "#openCursor takes a function as a 3rd param that is used in the onsuccess callback");
+
+      start();
     });
 
     var _res = [];
     index.openKeyCursor('Erik', 'prev', function(cursor, resolve) {
+
       if (cursor && cursor.primaryKey === 2) {
         equal(cursor.key, 'Erik', "#openKeyCursor range param is passed");
         equal(cursor.direction, 'prev', "#openKeyCursor direction param is passed");
@@ -78,7 +82,5 @@ asyncTest('Index API - requests', function() {
       var expected = [{id: 1, name: "Erik"}, {id:2, name: "Erik"}];
       deepEqual(result, expected, "#getAll collects the #openCursor results");
     });
-
-    start();
   });
 });

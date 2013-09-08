@@ -1,4 +1,4 @@
-asyncTest("EIDB.open and .version", function() {
+asyncTest("EIDB.open", function() {
   expect(3);
 
   EIDB.open("foo", 2).then(function(db) {
@@ -18,7 +18,19 @@ asyncTest("EIDB.open and .version", function() {
   });
 });
 
-if ('webkitGetDatabaseNames' in indexedDB) {
+asyncTest("EIDB.version", function() {
+  expect(1);
+
+  EIDB.open('foo').then(function() {
+    return EIDB.version('foo');
+  }).then(function(version) {
+    equal(version, 1, ".version returns the version");
+
+    start();
+  });
+});
+
+if (EIDB.isGetDatabaseNamesSupported()) {
   asyncTest('EIDB.webkitGetDatabaseNames', function() {
     expect(1);
 
@@ -67,6 +79,16 @@ if ('webkitGetDatabaseNames' in indexedDB) {
     }).then(function(res) {
 
       equal(res.version, 1, ".openOnly attempts to return the requested database version when it is lower than the current");
+
+      start();
+    });
+  });
+
+  asyncTest("EIDB.version", function() {
+    expect(1);
+
+    EIDB.version('foo').then(function(version) {
+      ok(version === null, ".version doesn't create a database if .getDatabaseNames supported");
 
       start();
     });

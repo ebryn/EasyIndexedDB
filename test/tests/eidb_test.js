@@ -120,7 +120,11 @@ if (!('webkitGetDatabaseNames' in indexedDB)) {
 }
 
 asyncTest('EIDB.bumpVersion', function() {
-  expect(3);
+  expect(4);
+
+  EIDB.bumpVersion().then(function(db) {
+    equal(db, null, "EIDB.bumpVersion will not create a database if no dbName argument given");
+  });
 
   EIDB.bumpVersion('foo', function(db) {
     db.createObjectStore('bar');

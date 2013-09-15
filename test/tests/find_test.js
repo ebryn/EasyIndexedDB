@@ -35,7 +35,7 @@ asyncTest('EIDB.find via param', function() {
 });
 
 asyncTest('EIDB.find via chaining', function() {
-  expect(4);
+  expect(8);
 
   var records = [
     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
@@ -80,6 +80,38 @@ asyncTest('EIDB.find via chaining', function() {
   }).then(function(res) {
 
     deepEqual(res, [{id: 4, name: "Eric", color: "blue"}], ".find can chain multiple #equal calls");
+
+    return EIDB.find('foo', 'kids')
+               .gte('name', 'Kenny')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"}, {id: 1, name: "Kyle", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #gte call");
+
+    return EIDB.find('foo', 'kids')
+               .gt('name', 'Kenny')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 1, name: "Kyle", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #gt call");
+
+    return EIDB.find('foo', 'kids')
+               .lt('name', 'Kenny')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}];
+
+    deepEqual(res, expected, ".find accepts a #lt call");
+
+    return EIDB.find('foo', 'kids')
+               .lte('name', 'Kenny')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}, {id: 2, name: "Kenny", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #lt call");
 
     start();
   });

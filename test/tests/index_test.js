@@ -84,3 +84,22 @@ asyncTest('Index API - requests', function() {
     });
   });
 });
+
+asyncTest('Index#hasKeyPath', function() {
+  expect(6);
+
+  EIDB.open('foo', null, function(db) {
+    var store = db.createObjectStore('bar'),
+        index = store.createIndex('by_name', 'name');
+        index2 = store.createIndex('by_name_color', ['name', 'color']);
+
+    ok(index.hasKeyPath('name'), "#hasKeyPath returns true if the index has the keyPath (string)")
+    equal(index2.hasKeyPath('name'), false, "#hasKeyPath returns false if non-array arg given for an index with an array keyPath");
+    ok(index2.hasKeyPath(['name', 'color']), "#hasKeyPath returns true if the index has the keyPath (array)")
+    ok(index2.hasKeyPath(['color', 'name']), "#hasKeyPath returns true if the index has the keyPath (array, position independent)")
+    ok(!index2.hasKeyPath(['color']), "#hasKeyPath returns false if argument does not contain all of the keyPath elements");
+    ok(!index2.hasKeyPath(['color', 'color']), "#hasKeyPath returns false if argument does not contain all of the keyPath elements");
+
+    start();
+  });
+});

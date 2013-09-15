@@ -293,3 +293,20 @@ asyncTest('EIDB.getAll', function() {
     start();
   });
 });
+
+asyncTest('EIDB.getIndexes', function() {
+  expect(2);
+
+  EIDB.createObjectStore('foo', 'kids').then(function() {
+    return EIDB.createIndex('foo', 'kids', 'by_name', 'name');
+  }).then(function() {
+    return EIDB.createIndex('foo', 'kids', 'by_name_color', ['name', 'color']);
+  }).then(function() {
+    return EIDB.getIndexes('foo', 'kids');
+  }).then(function(res) {
+    equal(res.length, 2, ".getIndexes returns an array of indexes of the correct length");
+    ok(res[0] instanceof EIDB.Index, ".getIndexes returns an array of indexes");
+
+    start();
+  });
+});

@@ -202,3 +202,27 @@ asyncTest('EIDB.find - index generation', function() {
     start();
   });
 });
+
+asyncTest('EIDB.find - #filter', function() {
+  expect(1);
+
+  var records = [
+    {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
+    {id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}
+  ];
+
+  EIDB.createObjectStore('foo', 'kids', {keyPath: 'id'}).then(function() {
+    return EIDB.addRecord('foo', 'kids', records);
+  }).then(function() {
+    return EIDB.find('foo', 'kids')
+               .filter(function(value) { return value.id > 3; })
+               .filter(function(value) { return value.color === 'blue'; })
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 4, name: "Eric", color: "blue"}];
+
+    deepEqual(res, expected, ".find accepts a #filter function");
+
+    start();
+  });
+});

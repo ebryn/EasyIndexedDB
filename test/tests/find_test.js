@@ -180,7 +180,7 @@ asyncTest('EIDB.find via chaining', function() {
 });
 
 asyncTest('EIDB.find - index generation', function() {
-  expect(1);
+  expect(2);
 
   var records = [
     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
@@ -191,14 +191,18 @@ asyncTest('EIDB.find - index generation', function() {
     return EIDB.addRecord('foo', 'kids', records);
   }).then(function() {
     return EIDB.find('foo', 'kids')
-               .gt('id', 1)
-               .eq('color', 'orange')
+               .lt('color', 'orange')
                .run();
   }).then(function(res) {
-    var expected = [{id: 2, name: "Kenny", color: "orange"}];
+    var expected = [{id: 4, name: "Eric", color: "blue"}];
 
     deepEqual(res, expected, ".find will create an index if one doesn't exist");
 
+    return EIDB.open('foo');
+  }).then(function(db) {
+    var index = db.objectStore('kids').index('color');
+
+    equal(index.keyPath, 'color', ".find creates the correct index when needed");
     start();
   });
 });

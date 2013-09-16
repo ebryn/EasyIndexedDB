@@ -230,3 +230,55 @@ asyncTest('EIDB.find - #filter', function() {
     start();
   });
 });
+
+asyncTest('EIDB.find - #first, #last and cursor direction', function() {
+  expect(5);
+
+  var records = [
+    {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
+    {id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}
+  ];
+
+  EIDB.createObjectStore('foo', 'kids', {keyPath: 'id'}).then(function() {
+    return EIDB.addRecord('foo', 'kids', records);
+  }).then(function() {
+    return EIDB.find('foo', 'kids')
+               .first();
+  }).then(function(res) {
+    var expected = {id: 1, name: "Kyle", color: "orange"};
+
+    deepEqual(res, expected, ".find accepts a #first call");
+
+    return EIDB.find('foo', 'kids')
+               .eq('name', 'Eric')
+               .first();
+  }).then(function(res) {
+    var expected = {id: 3, name: "Eric", color: "red"};
+
+    deepEqual(res, expected, ".find accepts a #first call in a chain");
+
+    return EIDB.find('foo', 'kids')
+               .last();
+  }).then(function(res) {
+    var expected = {id: 4, name: "Eric", color: "blue"};
+
+    deepEqual(res, expected, ".find accepts a #last call in a chain");
+
+    return EIDB.find('foo', 'kids')
+               .match('color', /rang/)
+               .last();
+  }).then(function(res) {
+    var expected = {id: 2, name: "Kenny", color: "orange"};
+
+    deepEqual(res, expected, ".find accepts a #last with a #filter call");
+
+    return EIDB.find('foo', 'kids')
+               .run('prev');
+  }).then(function(res) {
+    var expected = {id: 4, name: "Eric", color: "blue"};
+
+    deepEqual(res[0], expected, ".find accepts a cursor direction via #run");
+
+    start();
+  });
+});

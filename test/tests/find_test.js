@@ -178,3 +178,27 @@ asyncTest('EIDB.find via chaining', function() {
     start();
   });
 });
+
+asyncTest('EIDB.find - index generation', function() {
+  expect(1);
+
+  var records = [
+    {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
+    {id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}
+  ];
+
+  EIDB.createObjectStore('foo', 'kids', {keyPath: 'id'}).then(function() {
+    return EIDB.addRecord('foo', 'kids', records);
+  }).then(function() {
+    return EIDB.find('foo', 'kids')
+               .gt('id', 1)
+               .eq('color', 'orange')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"}];
+
+    deepEqual(res, expected, ".find will create an index if one doesn't exist");
+
+    start();
+  });
+});

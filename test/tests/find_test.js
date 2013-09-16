@@ -35,7 +35,7 @@ asyncTest('EIDB.find via param', function() {
 });
 
 asyncTest('EIDB.find via chaining', function() {
-  expect(8);
+  expect(14);
 
   var records = [
     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
@@ -46,6 +46,7 @@ asyncTest('EIDB.find via chaining', function() {
     store = db.createObjectStore('kids', {keyPath: 'id'});
     store.createIndex('by_name', 'name', {unique: false});
     store.createIndex('by_name_color', ['name', 'color']);
+    store.createIndex('by_color_id', ['color', 'id']);
   }).then(function() {
 
     return EIDB.addRecord('foo', 'kids', records);
@@ -53,7 +54,8 @@ asyncTest('EIDB.find via chaining', function() {
 
     return EIDB.find('foo', 'kids').match('name', /K/).run();
   }).then(function(res) {
-    var expected = [{id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"}];
+    var expected = [{id: 1, name: "Kyle", color: "orange"},
+                    {id: 2, name: "Kenny", color: "orange"}];
 
     deepEqual(res, expected, ".find can chain a #match call");
 
@@ -101,7 +103,8 @@ asyncTest('EIDB.find via chaining', function() {
                .lt('name', 'Kenny')
                .run();
   }).then(function(res) {
-    var expected = [{id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}];
+    var expected = [{id: 3, name: "Eric", color: "red"},
+                    {id: 4, name: "Eric", color: "blue"}];
 
     deepEqual(res, expected, ".find accepts a #lt call");
 
@@ -109,9 +112,68 @@ asyncTest('EIDB.find via chaining', function() {
                .lte('name', 'Kenny')
                .run();
   }).then(function(res) {
-    var expected = [{id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}, {id: 2, name: "Kenny", color: "orange"}];
+    var expected = [{id: 3, name: "Eric", color: "red"},
+                    {id: 4, name: "Eric", color: "blue"},
+                    {id: 2, name: "Kenny", color: "orange"}];
 
-    deepEqual(res, expected, ".find accepts a #lt call");
+    deepEqual(res, expected, ".find accepts a #lte call");
+
+    return EIDB.find('foo', 'kids')
+               .gte('name', 'Kenny')
+               .equal('color', 'orange')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"},
+                    {id: 1, name: "Kyle", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #gte and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .gte('id', 2)
+               .equal('color', 'orange')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #gte and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .equal('color', 'orange')
+               .lte('name', 'Kenny')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 4, name: "Eric", color: "blue"},
+                    {id: 3, name: "Eric", color: "red"},
+                    {id: 2, name: "Kenny", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #lte and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .lte('id', 1)
+               .eq('color', 'orange')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 1, name: "Kyle", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #lte and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .lt('id', 2)
+               .eq('color', 'orange')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 1, name: "Kyle", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #lt and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .eq('color', 'orange')
+               .gt('id', 1)
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"}];
+
+    deepEqual(res, expected, ".find accepts a #gt and a #equal call");
 
     start();
   });

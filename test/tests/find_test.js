@@ -198,7 +198,7 @@ asyncTest('EIDB.find via chaining', function() {
 });
 
 asyncTest('EIDB.find - index generation', function() {
-  expect(2);
+  expect(4);
 
   var records = [
     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
@@ -220,7 +220,22 @@ asyncTest('EIDB.find - index generation', function() {
   }).then(function(db) {
     var index = db.objectStore('kids').index('color');
 
-    equal(index.keyPath, 'color', ".find creates the correct index when needed");
+    equal(index.keyPath, 'color', ".find creates the correct keyPath (single) on the index");
+
+    return EIDB.find('foo', 'kids')
+               .eq({name: 'Eric', color: 'blue'})
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 4, name: "Eric", color: "blue"}];
+
+    deepEqual(res, expected, ".find will create a compound index if one doesn't exist");
+
+    return EIDB.open('foo');
+  }).then(function(db) {
+    var index = db.objectStore('kids').index('color_name');
+
+    deepEqual(index.keyPath.length, 2, ".find creates the correct keyPath (compound) on the index");
+
     start();
   });
 });

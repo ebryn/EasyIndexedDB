@@ -10,6 +10,8 @@ Information about working with IndexedDB can be found at the [Mozilla Developer 
 
 EIDB uses the [RSVP.js promise](https://github.com/tildeio/rsvp.js) implementation to handle asynchronous calls to IndexedDB.
 
+You will need to add the RSVP.js source code separately. If you are using Ember, then just place the EIDB source code after Ember since RSVP is included in Ember.
+
 ## Basic Usage
 
 For asynchronous commands, if you do not need to handle the results of a command, the simply call the command. If you need to handle the results as soon as they become available, you will need to chain a `.then` call.
@@ -39,7 +41,7 @@ For asynchronous commands, if you do not need to handle the results of a command
     `.addRecord` also accepts an array of records:
 
     ```javascript
-    var records = [{name: 'Kyle', name: 'Cartman'}];
+    var records = [{name: 'Kyle'}, {name: 'Cartman'}];
     EIDB.addRecord('myDB' 'kids', records).then(function(ids) {
       // the return value is an array of the keys (ids) of the newly created records
     });
@@ -58,10 +60,29 @@ For asynchronous commands, if you do not need to handle the results of a command
     ```javascript
     EIDB.deleteRecord('myDB', 'kids', 1);  // 1 is the record key
     ```
+### List of EIDB functions
+* `open(dbName, version, upgradeCallback, opts)`
+* `openOnly(dbName, version, upgradeCallback, opts)`: In Chrome, this will not create a database if the requested one does not exist. For other browsers, it will fall back to `open`.
+* `bumpVersion(dbName, upgradeCallback, opts)`: creates a new database version and allows you to perform upgrade actions on the database.
+* `version(dbName)`
+* `delete(dbName)`
+* `createObjectStore(dbName, storeName, storeOpts)`
+* `deleteObjectStore(dbName, storeName)`
+* `createIndex(dbName, storeName, indexName, keyPath, indexOpts)`
+* `getIndexes(dbName, storeName)`
+* `getAll(dbName, storeName, range, direction)`
+* `addRecord(dbName, storeName, value, key)`
+* `putRecord(dbName, storeName, value, key)`
+* `getRecord(dbName, storeName, key)`
+* `deleteRecord(dbName, storeName, key)`
+* `webkitGetDatabaseNames()`: Only works in Chrome.
+* `isGetDatabaseNamesSupported()`: Returns true for Chrome. This does not return a promise.
+* `getDatabaseNames()`: Will use `webkitGetDatabaseNames` if in Chrome. For other browsers, it will return a promise that results in an empty array.
+
 
 ## Basic Queries
 
-Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
+Say your records look something like this `{id: 1, name: 'Stan', color: 'red'}`
 
 * Find records that have an exact value
 
@@ -87,7 +108,7 @@ Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
     EIDB.find('myDB', 'kids')
         .match('name', /tan/)
         .first();
-        .then(function(results) { /* ... */ });
+        .then(function(record) { /* ... */ });
     ```
 
     Methods you can use in a query chain:
@@ -98,22 +119,71 @@ Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
     * `lte`: less than or equal to
     * `range`: combines `gte` and `lte`
 
-    ```javascript
-    .range('id', [10,20])
-    ```
+        ```javascript
+        .range('id', [10,20])
+        ```
 
     * `match`: test a record's key against a regular expression
     * `filter`: create your own filter
 
-    ```javascript
-    .filter(function(record) { return record.name.first === 'Chef'})
-    ```
+        ```javascript
+        .filter(function(record) { return record.name.first === 'Chef'})
+        ```
 
     * `run`: run the query. If you want to run the query in reverse direction pass it a 'prev' argument
 
-    ```javascript
-    .run('prev')
-    ```
+        ```javascript
+        .run('prev')
+        ```
 
     * `first`: use this instead of `run` to get just the first record
     * `last`: use this instead of `run` to get just the last record
+
+### Indexing
+If you search for records through `EIDB.find`, EIDB will automatically created the appropriate indexes for you if they do not exist. So if you call `eq('color', 'blue')`, EIDB will create an index called 'color'. If you call `eq({name: 'Kyle', color: 'blue'})`, EIDB will create an index called 'color_name'.
+
+## Error Handing
+
+If an error is encountered during an IndexedDB request, EIDB will catch it. If `EIDB.LOG_ERRORS = true` (default), then you will see error information in the browser console.
+
+If you want to process the error in your application, then you can register an error handler with EIDB.
+
+```javascript
+EIDB.registerErrorHandler(function(err) {
+   /* have the app process the error */
+});
+```
+## Working Closer to the IndexedDB API
+EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line indexes are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:
+
+```javascript
+var results = [];
+
+EIDB.open('myDB', 1, function(db) {
+  var store = db.createObjectStore('kids', {keyPath: 'id'});
+  var index = store.createIndex('by_name', 'name', {unique: false});
+
+}).then(function(db) {
+  var store = db.objectStore('kids');
+
+  store.add({id: 1, name: 'Kenny'});
+  store.add({id: 2, name: 'Kenny'});
+
+  return EIDB.open('myDB', 1);
+}).then(function(db) {
+  var tx = db.transaction('kids'),
+      index = tx.objectStore('kids').index('by_name');
+      res = [];
+
+  index.openCursor('Kenny', 'prev', function(cursor, resolve) {
+    if (cursor) {
+      res.push(cursor.value);
+      cursor.continue();
+    } else {
+      resolve(res);
+    }
+  }).then(function(res) {
+    results = res;
+  });
+});
+```

@@ -39,7 +39,8 @@ For asynchronous commands, if you do not need to handle the results of a command
     `.addRecord` also accepts an array of records:
 
     ```javascript
-    EIDB.addRecord('myDB' 'kids', [{},{}]).then(function(ids) {
+    var records = [{name: 'Kyle', name: 'Cartman'}];
+    EIDB.addRecord('myDB' 'kids', records).then(function(ids) {
       // the return value is an array of the keys (ids) of the newly created records
     });
     ```
@@ -80,5 +81,40 @@ Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
         .eq('name', 'Stan')  // name should equal 'Stan'
         .gte('color', 'green')  // color should be greater than or equal to 'green'
         .run()
-        .then(function(results) { //... });
+        .then(function(results) { /* ... */ });
     ```
+
+    ```javascript
+    EIDB.find('myDB', 'kids')
+        .match('name', /tan/)
+        .first();
+        .then(function(results) { /* ... */ });
+    ```
+
+    Methods you can use in a query chain:
+    * `eq` or `equal`: exact matches
+    * `gt`: greater than
+    * `gte`: greater than or equal to
+    * `lt`: less than
+    * `lte`: less than or equal to
+    * `range`: combines `gte` and `lte`
+
+    ```javascript
+    .range('id', [10,20])
+    ```
+
+    * `match`: test a record's key against a regular expression
+    * `filter`: create your own filter
+
+    ```javascript
+    .filter(function(record) { return record.name.first === 'Chef'})
+    ```
+
+    * `run`: run the query. If you want to run the query in reverse direction pass it a 'prev' argument
+
+    ```javascript
+    .run('prev')
+    ```
+
+    * `first`: use this instead of `run` to get just the first record
+    * `last`: use this instead of `run` to get just the last record

@@ -35,7 +35,7 @@ asyncTest('EIDB.find via param', function() {
 });
 
 asyncTest('EIDB.find via chaining', function() {
-  expect(14);
+  expect(16);
 
   var records = [
     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
@@ -164,7 +164,16 @@ asyncTest('EIDB.find via chaining', function() {
   }).then(function(res) {
     var expected = [{id: 1, name: "Kyle", color: "orange"}];
 
-    deepEqual(res, expected, ".find accepts a #lt and a #equal call");
+    deepEqual(res, expected, ".find accepts a #lt (number) and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .lt('color', 'red')
+               .eq('name', 'Eric')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 4, name: "Eric", color: "blue"}];
+
+    deepEqual(res, expected, ".find accepts a #lt (string) and a #equal call");
 
     return EIDB.find('foo', 'kids')
                .eq('color', 'orange')
@@ -173,7 +182,16 @@ asyncTest('EIDB.find via chaining', function() {
   }).then(function(res) {
     var expected = [{id: 2, name: "Kenny", color: "orange"}];
 
-    deepEqual(res, expected, ".find accepts a #gt and a #equal call");
+    deepEqual(res, expected, ".find accepts a #gt (number) and a #equal call");
+
+    return EIDB.find('foo', 'kids')
+               .gt('color', 'blue')
+               .eq('name', 'Eric')
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 3, name: "Eric", color: "red"}];
+
+    deepEqual(res, expected, ".find accepts a #gt (string) and a #equal call");
 
     start();
   });
@@ -282,3 +300,28 @@ asyncTest('EIDB.find - #first, #last and cursor direction', function() {
     start();
   });
 });
+
+// asyncTest('EIDB.find - combined upper and lower ranges for a given property', function() {
+//   expect(1);
+
+//   var records = [
+//     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
+//     {id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}
+//   ];
+
+//   EIDB.createObjectStore('foo', 'kids', {keyPath: 'id'}).then(function() {
+//     return EIDB.addRecord('foo', 'kids', records);
+//   }).then(function() {
+//     return EIDB.find('foo', 'kids')
+//                .gte('id', 2)
+//                .lte('id', 3)
+//                .run();
+//   }).then(function(res) {
+//     var expected = [{id: 2, name: "Kenny", color: "orange"},
+//                     {id: 3, name: "Eric", color: "red"}];
+
+//     deepEqual(res, expected, ".find accepts a #gte and #lte calls for the same property");
+
+//     start();
+//   });
+// });

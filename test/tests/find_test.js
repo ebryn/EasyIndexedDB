@@ -301,27 +301,53 @@ asyncTest('EIDB.find - #first, #last and cursor direction', function() {
   });
 });
 
-// asyncTest('EIDB.find - combined upper and lower ranges for a given property', function() {
-//   expect(1);
+asyncTest('EIDB.find - combined ranges', function() {
+  expect(4);
 
-//   var records = [
-//     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
-//     {id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}
-//   ];
+  var records = [
+    {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
+    {id: 3, name: "Eric", color: "red"}, {id: 4, name: "Eric", color: "blue"}
+  ];
 
-//   EIDB.createObjectStore('foo', 'kids', {keyPath: 'id'}).then(function() {
-//     return EIDB.addRecord('foo', 'kids', records);
-//   }).then(function() {
-//     return EIDB.find('foo', 'kids')
-//                .gte('id', 2)
-//                .lte('id', 3)
-//                .run();
-//   }).then(function(res) {
-//     var expected = [{id: 2, name: "Kenny", color: "orange"},
-//                     {id: 3, name: "Eric", color: "red"}];
+  EIDB.createObjectStore('foo', 'kids', {keyPath: 'id'}).then(function() {
+    return EIDB.addRecord('foo', 'kids', records);
+  }).then(function() {
 
-//     deepEqual(res, expected, ".find accepts a #gte and #lte calls for the same property");
+    return EIDB.find('foo', 'kids')
+               .gte('id', 2)
+               .lte('id', 3)
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"},
+                    {id: 3, name: "Eric", color: "red"}];
 
-//     start();
-//   });
-// });
+    deepEqual(res, expected, ".find accepts a #gte and #lte calls for the same property");
+
+    return EIDB.find('foo', 'kids')
+               .range('id', [2, 3])
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 2, name: "Kenny", color: "orange"},
+                    {id: 3, name: "Eric", color: "red"}];
+
+    deepEqual(res, expected, ".find accepts a #range call (equivalent to #gte + #lte)");
+
+    return EIDB.find('foo', 'kids')
+               .gt('id', 2)
+               .lt('id', 4)
+               .run();
+  }).then(function(res) {
+    var expected = [{id: 3, name: "Eric", color: "red"}];
+
+    deepEqual(res, expected, ".find accepts a #gt and #lt calls for the same property");
+
+    return EIDB.find('foo', 'kids')
+               .lt('id', 2)
+               .gt('id', 4)
+               .run();
+  }).then(function() {
+
+    ok(true, "EIDB catches a range error");
+    start();
+  });
+});

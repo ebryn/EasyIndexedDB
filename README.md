@@ -14,7 +14,7 @@ You will need to add the RSVP.js source code separately. If you are using Ember,
 
 ## Basic Usage
 
-For asynchronous commands, if you do not need to handle the results of a command, the simply call the command. If you need to handle the results as soon as they become available, you will need to chain a `.then` call.
+For asynchronous commands, if you do not need to handle the results of a command, then simply call the command. If you need to handle the results as soon as they become available, you will need to chain a `.then` call.
 
 * Create/open a database
 
@@ -123,7 +123,7 @@ Say your records look something like this `{id: 1, name: 'Stan', color: 'red'}`
         .range('id', [10,20])
         ```
 
-    * `match`: test a record's key against a regular expression
+    * `match`: test a record against a regular expression
     * `filter`: create your own filter
 
         ```javascript
@@ -154,7 +154,7 @@ EIDB.registerErrorHandler(function(err) {
 });
 ```
 ## Working Closer to the IndexedDB API
-EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line indexes are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:
+EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line object stores are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:
 
 ```javascript
 var results = [];

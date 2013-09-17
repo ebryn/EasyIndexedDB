@@ -12,7 +12,7 @@ EIDB uses the [RSVP.js promise](https://github.com/tildeio/rsvp.js) implementati
 
 ## Basic Usage
 
-For asynchronous commands, if you do not need to handle the results of a command, the simply call the command. If you need to handle the results as soon as they become available, you will need to chain a `.then` call.
+For asynchronous commands, if you do not need to handle the results of a command, then simply call the command. If you need to handle the results as soon as they become available, you will need to chain a `.then` call.
 
 * Create/open a database
 
@@ -103,7 +103,7 @@ Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
     .range('id', [10,20])
     ```
 
-    * `match`: test a record's key against a regular expression
+    * `match`: test a record against a regular expression
     * `filter`: create your own filter
 
     ```javascript
@@ -118,3 +118,52 @@ Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
 
     * `first`: use this instead of `run` to get just the first record
     * `last`: use this instead of `run` to get just the last record
+
+### Indexing
+If you search for records through `EIDB.find`, EIDB will automatically created the appropriate indexes for you if they do not exist. So if you call `eq('color', 'blue')`, EIDB will create an index called 'color'. If you call `eq({name: 'Kyle', color: 'blue'})`, EIDB will create an index called 'color_name'.
+
+## Error Handing
+
+If an error is encountered during an IndexedDB request, EIDB will catch it. If `EIDB.LOG_ERRORS = true` (default), then you will see error information in the browser console.
+
+If you want to process the error in your application, then you can register an error handler with EIDB.
+
+```javascript
+EIDB.registerErrorHandler(function(err) {
+   /* have the app process the error */
+});
+```
+## Working Closer to the IndexedDB API
+EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line object stores are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:
+
+```javascript
+var results = [];
+
+EIDB.open('myDB', 1, function(db) {
+  var store = db.createObjectStore('kids', {keyPath: 'id'});
+  var index = store.createIndex('by_name', 'name', {unique: false});
+
+}).then(function(db) {
+  var store = db.objectStore('kids');
+
+  store.add({id: 1, name: 'Kenny'});
+  store.add({id: 2, name: 'Kenny'});
+
+  return EIDB.open('myDB', 1);
+}).then(function(db) {
+  var tx = db.transaction('kids'),
+      index = tx.objectStore('kids').index('by_name');
+      res = [];
+
+  index.openCursor('Kenny', 'prev', function(cursor, resolve) {
+    if (cursor) {
+      res.push(cursor.value);
+      cursor.continue();
+    } else {
+      resolve(res);
+    }
+  }).then(function(res) {
+    results = res;
+  });
+});
+```

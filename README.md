@@ -59,6 +59,25 @@ For asynchronous commands, if you do not need to handle the results of a command
     EIDB.deleteRecord('myDB', 'kids', 1);  // 1 is the record key
     ```
 
+### List of EIDB functions
+* `open(dbName, version, upgradeCallback, opts)`
+* `openOnly(dbName, version, upgradeCallback, opts)`: In Chrome, this will not create a database if the requested one does not exist. For other browsers, it will fall back to `open`.
+* `bumpVersion(dbName, upgradeCallback, opts)`: creates a new database version and allows you to perform upgrade actions on the database.
+* `version(dbName)`
+* `delete(dbName)`
+* `createObjectStore(dbName, storeName, storeOpts)`
+* `deleteObjectStore(dbName, storeName)`
+* `createIndex(dbName, storeName, indexName, keyPath, indexOpts)`
+* `getIndexes(dbName, storeName)`
+* `getAll(dbName, storeName, range, direction)`
+* `addRecord(dbName, storeName, value, key)`
+* `putRecord(dbName, storeName, value, key)`
+* `getRecord(dbName, storeName, key)`
+* `deleteRecord(dbName, storeName, key)`
+* `webkitGetDatabaseNames()`: Only works in Chrome.
+* `isGetDatabaseNamesSupported`: A property that returns true for Chrome.
+* `getDatabaseNames()`: Will use `webkitGetDatabaseNames` if in Chrome. For other browsers, it will return a promise that results in an empty array.
+
 ## Basic Queries
 
 Say your records look something like this {id: 1, name: 'Stan', color: 'red'}

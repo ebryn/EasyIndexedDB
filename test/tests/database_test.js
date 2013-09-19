@@ -1,4 +1,10 @@
-asyncTest("Database API", function() {
+module("Database", {
+  teardown: function() {
+    EIDB.delete('foo');
+  }
+});
+
+asyncTest("API", function() {
   expect(7);
 
   EIDB.open("foo", 1, function(db) {
@@ -31,7 +37,7 @@ asyncTest("Database API", function() {
   });
 });
 
-asyncTest("Database - CRUD records", function() {
+asyncTest("CRUD records", function() {
   expect(7);
 
   EIDB.open("foo", 1, function(db) {

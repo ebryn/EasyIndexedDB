@@ -1,4 +1,11 @@
-asyncTest('ObjectStore - properties', function() {
+module("ObjectStore", {
+  teardown: function() {
+    EIDB.delete('foo');
+    EIDB.delete('foo2');
+  }
+});
+
+asyncTest('properties', function() {
   expect(3);
 
   EIDB.createObjectStore('foo', 'people', {keyPath: 'id'}).then(function(db) {
@@ -16,7 +23,7 @@ asyncTest('ObjectStore - properties', function() {
   });
 });
 
-asyncTest("ObjectStore - CRUD records", function() {
+asyncTest("CRUD records", function() {
   expect(7);
 
   EIDB.createObjectStore('foo', "people", { keyPath: "id" }).then(function(db) {
@@ -57,7 +64,7 @@ asyncTest("ObjectStore - CRUD records", function() {
   });
 });
 
-asyncTest('ObjectStore - indexes', function() {
+asyncTest('indexes', function() {
   expect(7);
 
   EIDB.open('foo', 1, function(db) {
@@ -90,7 +97,7 @@ asyncTest('ObjectStore - indexes', function() {
   });
 });
 
-asyncTest('ObjectStore#openCursor, #getAll, #count,  #clear', function() {
+asyncTest('#openCursor, #getAll, #count,  #clear', function() {
   expect(7);
 
   EIDB.createObjectStore('foo', 'people', {keyPath: 'id'}).then(function(db) {
@@ -140,7 +147,7 @@ asyncTest('ObjectStore#openCursor, #getAll, #count,  #clear', function() {
   });
 });
 
-asyncTest("ObjectStore#insertWith_key", function() {
+asyncTest("#insertWith_key", function() {
   expect(2);
 
   // TransactionInactiveError...

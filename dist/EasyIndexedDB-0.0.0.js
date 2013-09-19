@@ -137,9 +137,52 @@ define("eidb/database",
 
     __exports__.Database = Database;
   });
+define("eidb/database_tracking",
+  ["eidb/promise","exports"],
+  function(__dependency1__, __exports__) {
+    "use strict";
+    var RSVP = __dependency1__.RSVP;
+
+    var DATABASE_TRACKING = false,
+        TRACKING_DB_NAME = '__eidb__',
+        TRACKING_DB_STORE_NAME = 'databases';
+
+    function _trackDb(target, resolve) {
+      var EIDB = window.EIDB;
+
+      if (target.name === TRACKING_DB_NAME) { return; }
+
+      EIDB.open(TRACKING_DB_NAME).then(function(db) {
+        if (db.objectStoreNames.contains(TRACKING_DB_STORE_NAME)) {
+          return db.add(TRACKING_DB_STORE_NAME, target.name, {}).then(function(res) {
+            EIDB.trigger('dbWasTracked');
+          });
+        }
+
+        EIDB.createObjectStore(TRACKING_DB_NAME, TRACKING_DB_STORE_NAME, {keyPath: 'name'}).then(function(db) {
+          return db.add(TRACKING_DB_STORE_NAME, target.name, {});
+        }).then(function() {
+          EIDB.trigger('dbWasTracked');
+        });
+      });
+    }
+
+    _trackDb.remove = function(dbName) {
+      if (dbName === TRACKING_DB_NAME) { return; }
+
+      var EIDB = window.EIDB;
+
+      EIDB.deleteRecord(TRACKING_DB_NAME, TRACKING_DB_STORE_NAME, dbName);
+      EIDB.trigger('dbWasUntracked');
+    };
+
+
+    __exports__._trackDb = _trackDb;
+    __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
+  });
 define("eidb/eidb",
-  ["eidb/indexed_db","eidb/promise","eidb/database","eidb/utils","eidb/error_handling","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
+  ["eidb/indexed_db","eidb/promise","eidb/database","eidb/utils","eidb/error_handling","eidb/database_tracking","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
     var indexedDB = __dependency1__.indexedDB;
     var Promise = __dependency2__.Promise;
@@ -149,6 +192,7 @@ define("eidb/eidb",
     var _request = __dependency4__._request;
     var __instrument__ = __dependency4__.__instrument__;
     var _rsvpErrorHandler = __dependency5__._rsvpErrorHandler;
+    var _trackDb = __dependency6__._trackDb;
 
     function open(dbName, version, upgradeCallback, opts) {
       return new Promise(function(resolve, reject) {
@@ -156,9 +200,11 @@ define("eidb/eidb",
             req = version ? indexedDB.open(dbName, version) : indexedDB.open(dbName);
 
         req.onsuccess = function(event) {
-          EIDB.error = null;
-
           var db = new Database(req.result);
+
+          EIDB.error = null;
+          if (EIDB.DATABASE_TRACKING === true) { _trackDb(db); }
+
           resolve(db);
 
           if (!opts || (opts && !opts.keepOpen)) {
@@ -197,12 +243,12 @@ define("eidb/eidb",
       return _request(indexedDB, "webkitGetDatabaseNames");
     }
 
-    function isGetDatabaseNamesSupported() {
+    var isGetDatabaseNamesSupported = (function() {
       return 'webkitGetDatabaseNames' in indexedDB;
-    }
+    })();
 
     function getDatabaseNames() {
-      if (isGetDatabaseNamesSupported()) {
+      if (isGetDatabaseNamesSupported) {
         return webkitGetDatabaseNames();
       }
 
@@ -211,7 +257,7 @@ define("eidb/eidb",
     }
 
     function openOnly(dbName, version, upgradeCallback, opts) {
-      if (isGetDatabaseNamesSupported()) {
+      if (isGetDatabaseNamesSupported) {
         return getDatabaseNames().then(function(names) {
           if (names.contains(dbName) && !version) {
             return open(dbName, version, upgradeCallback, opts);
@@ -1023,11 +1069,12 @@ define("eidb/transaction",
     __exports__.Transaction = Transaction;
   });
 define("eidb/utils",
-  ["eidb/promise","eidb/error_handling","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["eidb/promise","eidb/error_handling","eidb/database_tracking","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var Promise = __dependency1__.Promise;
     var _rsvpErrorHandler = __dependency2__._rsvpErrorHandler;
+    var _trackDb = __dependency3__._trackDb;
 
     function __instrument__(methodCallback) {
       if (__instrument__.setup) {
@@ -1049,6 +1096,8 @@ define("eidb/utils",
 
         req.onsuccess = function(evt) {
           EIDB.error = null;
+          if (method === 'deleteDatabase' && EIDB.DATABASE_TRACKING === true) { _trackDb.remove(args[0]); }
+
           resolve(evt.target.result);
         };
         req.onerror = function(evt) {

@@ -1,4 +1,10 @@
-asyncTest("EIDB.Transaction", function() {
+module("Transaction", {
+  teardown: function() {
+    EIDB.delete('foo');
+  }
+});
+
+asyncTest("native IDB transaction is not seen", function() {
   expect(2);
 
   EIDB.open("foo", 1, function(db) {

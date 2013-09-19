@@ -1,4 +1,10 @@
-asyncTest("EIDB.open", function() {
+module("EIDB", {
+  teardown: function() {
+    EIDB.delete('foo');
+  }
+});
+
+asyncTest(".open", function() {
   expect(3);
 
   EIDB.open("foo", 2).then(function(db) {
@@ -18,7 +24,7 @@ asyncTest("EIDB.open", function() {
   });
 });
 
-asyncTest("EIDB.version", function() {
+asyncTest(".version", function() {
   expect(1);
 
   EIDB.open('foo').then(function() {
@@ -31,31 +37,31 @@ asyncTest("EIDB.version", function() {
 });
 
 if (EIDB.isGetDatabaseNamesSupported()) {
-  asyncTest('EIDB.webkitGetDatabaseNames', function() {
+  asyncTest('.webkitGetDatabaseNames', function() {
     expect(1);
 
     EIDB.open('foo').then(function(db) {
       EIDB.webkitGetDatabaseNames().then(function(names) {
-        ok(names.contains('foo'), "EIDB.webkitGetDatabaseNames returns a list of database names (Chrome)");
+        ok(names.contains('foo'), ".webkitGetDatabaseNames returns a list of database names (Chrome)");
 
         start();
       });
     });
   });
 
-  asyncTest('EIDB.getDatabaseNames', function() {
+  asyncTest('.getDatabaseNames', function() {
     expect(1);
 
     EIDB.open('foo').then(function(db) {
       EIDB.getDatabaseNames().then(function(names) {
-        ok(names.contains('foo'), "EIDB.getDatabaseNames returns a list of database names (Chrome)");
+        ok(names.contains('foo'), ".getDatabaseNames returns a list of database names (Chrome)");
 
         start();
       });
     });
   });
 
-  asyncTest('EIDB.openOnly (.getDatabaseNames is supported)', function() {
+  asyncTest('.openOnly (.getDatabaseNames is supported)', function() {
     expect(5);
 
     EIDB.openOnly('foo').then(function(res) {
@@ -84,7 +90,7 @@ if (EIDB.isGetDatabaseNamesSupported()) {
     });
   });
 
-  asyncTest("EIDB.version", function() {
+  asyncTest(".version", function() {
     expect(1);
 
     EIDB.version('foo').then(function(version) {
@@ -108,7 +114,7 @@ if (!('webkitGetDatabaseNames' in indexedDB)) {
     });
   });
 
-  asyncTest('EIDB.openOnly (.getDatabaseNames is not supported)', function() {
+  asyncTest('.openOnly (.getDatabaseNames is not supported)', function() {
     expect(1);
 
     EIDB.openOnly('foo', 6).then(function(db) {
@@ -119,28 +125,28 @@ if (!('webkitGetDatabaseNames' in indexedDB)) {
   });
 }
 
-asyncTest('EIDB.bumpVersion', function() {
+asyncTest('.bumpVersion', function() {
   expect(4);
 
   EIDB.bumpVersion().then(function(db) {
-    equal(db, null, "EIDB.bumpVersion will not create a database if no dbName argument given");
+    equal(db, null, ".bumpVersion will not create a database if no dbName argument given");
   });
 
   EIDB.bumpVersion('foo', function(db) {
     db.createObjectStore('bar');
   }).then(function(db) {
-    equal(db.version, 2, 'EIDB.bumpVersion will start a new database at version 2');
+    equal(db.version, 2, '.bumpVersion will start a new database at version 2');
     ok(db.objectStoreNames.contains('bar'), "EIDB.bumpVersion takes a upgrade callback");
 
     return EIDB.bumpVersion('foo');
   }).then(function(db) {
-    equal(db.version, 3, 'EIDB.bumpVersion will increase an existing database version by 1');
+    equal(db.version, 3, '.bumpVersion will increase an existing database version by 1');
 
     start();
   });
 });
 
-asyncTest('EIDB.createObjectStore', function() {
+asyncTest('.createObjectStore', function() {
   expect(4);
 
   EIDB.createObjectStore('foo', 'dogs', {keyPath: 'id'}).then(function(db) {
@@ -159,7 +165,7 @@ asyncTest('EIDB.createObjectStore', function() {
   });
 });
 
-asyncTest('EIDB.deleteObjectStore', function() {
+asyncTest('.deleteObjectStore', function() {
   expect(1);
 
   EIDB.createObjectStore('foo', 'dogs').then(function(db) {
@@ -171,7 +177,7 @@ asyncTest('EIDB.deleteObjectStore', function() {
   });
 });
 
-asyncTest('EIDB.createIndex', function() {
+asyncTest('.createIndex', function() {
   expect(5);
 
   EIDB.createObjectStore('foo', 'people').then(function(db) {
@@ -190,7 +196,7 @@ asyncTest('EIDB.createIndex', function() {
   });
 });
 
-asyncTest("EIDB CRUD records - in-line keys", function() {
+asyncTest("CRUD records - in-line keys", function() {
   expect(6);
 
   var records;
@@ -232,7 +238,9 @@ asyncTest("EIDB CRUD records - in-line keys", function() {
   });
 });
 
-asyncTest("EIDB CRUD records - out-of-line keys", function() {
+asyncTest("CRUD records - out-of-line keys", function() {
+  expect(5);
+
   EIDB.createObjectStore('foo', 'pets').then(function(db) {
     return EIDB.addRecord('foo', 'pets', {name: 'Frank'}, 4).then(function() {
       return EIDB.addRecord('foo', 'pets', {name: 'Fido'});
@@ -273,7 +281,7 @@ asyncTest("EIDB CRUD records - out-of-line keys", function() {
   });
 });
 
-asyncTest('EIDB.getAll', function() {
+asyncTest('.getAll', function() {
   expect(2);
 
   var records = [{name: "Ronny"}, {name: "Bobby"}, {name: "Ricky"}, {name: "Mike"}];
@@ -294,7 +302,7 @@ asyncTest('EIDB.getAll', function() {
   });
 });
 
-asyncTest('EIDB.getIndexes', function() {
+asyncTest('.getIndexes', function() {
   expect(2);
 
   EIDB.createObjectStore('foo', 'kids').then(function() {

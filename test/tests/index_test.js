@@ -1,4 +1,10 @@
-asyncTest('Index API - properties', function() {
+module("Index", {
+  teardown: function() {
+    EIDB.delete('foo');
+  }
+});
+
+asyncTest('API - properties', function() {
   expect(5);
 
   EIDB.open('foo', 1, function(db) {
@@ -15,7 +21,7 @@ asyncTest('Index API - properties', function() {
   });
 });
 
-asyncTest('Index API - requests', function() {
+asyncTest('API - requests', function() {
   expect(13);
 
   EIDB.open('foo', 1, function(db) {
@@ -85,12 +91,12 @@ asyncTest('Index API - requests', function() {
   });
 });
 
-asyncTest('Index#hasKeyPath', function() {
+asyncTest('#hasKeyPath', function() {
   expect(6);
 
   EIDB.open('foo', null, function(db) {
     var store = db.createObjectStore('bar'),
-        index = store.createIndex('by_name', 'name');
+        index = store.createIndex('by_name', 'name'),
         index2 = store.createIndex('by_name_color', ['name', 'color']);
 
     ok(index.hasKeyPath('name'), "#hasKeyPath returns true if the index has the keyPath (string)")

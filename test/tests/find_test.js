@@ -1,4 +1,10 @@
-asyncTest('EIDB.find via param', function() {
+module("EIDB.find", {
+  teardown: function() {
+    EIDB.delete('foo');
+  }
+});
+
+asyncTest('via param', function() {
   expect(3);
 
   var records = [
@@ -7,7 +13,7 @@ asyncTest('EIDB.find via param', function() {
   ];
 
   EIDB.open('foo', null, function(db) {
-    store = db.createObjectStore('kids', {keyPath: 'id'});
+    var store = db.createObjectStore('kids', {keyPath: 'id'});
     store.createIndex('by_name', 'name', {unique: false});
     store.createIndex('by_name_color', ['name', 'color']);
   }).then(function() {
@@ -34,8 +40,8 @@ asyncTest('EIDB.find via param', function() {
   });
 });
 
-asyncTest('EIDB.find via chaining', function() {
-  expect(16);
+asyncTest('via chaining', function() {
+  expect(17);
 
   var records = [
     {id: 1, name: "Kyle", color: "orange"}, {id: 2, name: "Kenny", color: "orange"},
@@ -43,7 +49,7 @@ asyncTest('EIDB.find via chaining', function() {
   ];
 
   EIDB.open('foo', null, function(db) {
-    store = db.createObjectStore('kids', {keyPath: 'id'});
+    var store = db.createObjectStore('kids', {keyPath: 'id'});
     store.createIndex('by_name', 'name', {unique: false});
     store.createIndex('by_name_color', ['name', 'color']);
     store.createIndex('by_color_id', ['color', 'id']);
@@ -58,6 +64,11 @@ asyncTest('EIDB.find via chaining', function() {
                     {id: 2, name: "Kenny", color: "orange"}];
 
     deepEqual(res, expected, ".find can chain a #match call");
+
+    return EIDB.find('foo', 'kids').match('asd', /K/).run();
+  }).then(function(res) {
+
+    equal(res.length, 0, '.find does not error if matching a non-existent attribute');
 
     return EIDB.find('foo', 'kids')
                .match('name', /ric/)
@@ -225,7 +236,7 @@ asyncTest('EIDB.find - index generation', function() {
   });
 });
 
-asyncTest('EIDB.find - #filter', function() {
+asyncTest('#filter', function() {
   expect(1);
 
   var records = [
@@ -249,7 +260,7 @@ asyncTest('EIDB.find - #filter', function() {
   });
 });
 
-asyncTest('EIDB.find - #first, #last and cursor direction', function() {
+asyncTest('#first, #last and cursor direction', function() {
   expect(5);
 
   var records = [
@@ -301,7 +312,7 @@ asyncTest('EIDB.find - #first, #last and cursor direction', function() {
   });
 });
 
-asyncTest('EIDB.find - combined ranges', function() {
+asyncTest('combined ranges', function() {
   expect(4);
 
   var records = [
@@ -341,6 +352,7 @@ asyncTest('EIDB.find - combined ranges', function() {
 
     deepEqual(res, expected, ".find accepts a #gt and #lt calls for the same property");
 
+    EIDB.LOG_ERRORS = false;
     return EIDB.find('foo', 'kids')
                .lt('id', 2)
                .gt('id', 4)
@@ -348,6 +360,8 @@ asyncTest('EIDB.find - combined ranges', function() {
   }).then(function() {
 
     ok(true, "EIDB catches a range error");
+
+    EIDB.LOG_ERRORS = true;
     start();
   });
 });

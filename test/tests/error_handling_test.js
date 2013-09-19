@@ -1,6 +1,17 @@
-EIDB.LOG_ERRORS = false;
+module("Error Handing", {
+  setup: function() {
+    EIDB.LOG_ERRORS = false;
 
-asyncTest('EIDB.errors - ObjectStore', function() {
+  },
+
+  teardown: function() {
+    EIDB.delete('foo');
+    EIDB.delete('foo2');
+    EIDB.LOG_ERRORS = true;
+  }
+});
+
+asyncTest('ObjectStore', function() {
   expect(5);
 
   EIDB.open('foo', 1, function(db) {
@@ -37,7 +48,7 @@ asyncTest('EIDB.errors - ObjectStore', function() {
   });
 });
 
-asyncTest('EIDB.errors - utils', function() {
+asyncTest('Utils', function() {
   expect(4);
 
   EIDB.createObjectStore('foo', 'bar').then(function(db) {
@@ -77,7 +88,7 @@ asyncTest('EIDB.errors - utils', function() {
 });
 
 // Database#close not tested, but error handling implement
-asyncTest('EIDB.errors - Database', function() {
+asyncTest('Database', function() {
   expect(3);
 
   EIDB.open('foo', 1, function(db) {
@@ -96,7 +107,7 @@ asyncTest('EIDB.errors - Database', function() {
   });
 });
 
-asyncTest('EIDB.errors - Transaction', function() {
+asyncTest('Transaction', function() {
   expect(1);
   var tx;
 
@@ -113,7 +124,7 @@ asyncTest('EIDB.errors - Transaction', function() {
   });
 });
 
-asyncTest('EIDB.errors - .open', function() {
+asyncTest('EIDB.open', function() {
   expect(3);
 
   EIDB.open('foo', 1).then(function() {
@@ -135,7 +146,7 @@ asyncTest('EIDB.errors - .open', function() {
   });
 });
 
-asyncTest('EIDB.registerErrorHandler - RSVP error', function() {
+asyncTest('EIDB.registerErrorHandler (RSVP error)', function() {
   expect(1);
 
   EIDB.registerErrorHandler(function(err) {
@@ -149,7 +160,7 @@ asyncTest('EIDB.registerErrorHandler - RSVP error', function() {
 
 });
 
-asyncTest('EIDB.registerErrorHandler - _request error', function() {
+asyncTest('EIDB.registerErrorHandler (_request error)', function() {
   expect(1);
 
   EIDB.registerErrorHandler(function(err) {

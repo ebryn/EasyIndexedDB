@@ -36,7 +36,7 @@ asyncTest(".version", function() {
   });
 });
 
-if (EIDB.isGetDatabaseNamesSupported()) {
+if (EIDB.isGetDatabaseNamesSupported) {
   asyncTest('.webkitGetDatabaseNames', function() {
     expect(1);
 

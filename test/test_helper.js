@@ -6,3 +6,7 @@ QUnit.config.requireExpects = true;
 RSVP.configure('onerror', function(error) {
   console.log('RSVP onerror', error, error.message + '', error.stack);
 });
+
+function errorHandler(e) {
+  return errorHandler.error = e;
+}

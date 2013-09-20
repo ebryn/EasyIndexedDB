@@ -136,7 +136,7 @@ asyncTest('.bumpVersion', function() {
     db.createObjectStore('bar');
   }).then(function(db) {
     equal(db.version, 2, '.bumpVersion will start a new database at version 2');
-    ok(db.objectStoreNames.contains('bar'), "EIDB.bumpVersion takes a upgrade callback");
+    ok(db.hasObjectStore('bar'), "EIDB.bumpVersion takes a upgrade callback");
 
     return EIDB.bumpVersion('foo');
   }).then(function(db) {
@@ -153,7 +153,7 @@ asyncTest('.createObjectStore', function() {
     var store = db.objectStore('dogs');
 
     equal(db.name, 'foo', "The correct database is used");
-    ok(db.objectStoreNames.contains('dogs'), "The store is created");
+    ok(db.hasObjectStore('dogs'), "The store is created");
     equal(store.keyPath, 'id', "Store options are passed");
 
     return EIDB.createObjectStore('foo', 'cats');
@@ -171,7 +171,7 @@ asyncTest('.deleteObjectStore', function() {
   EIDB.createObjectStore('foo', 'dogs').then(function(db) {
     return EIDB.deleteObjectStore('foo', 'dogs');
   }).then(function(db) {
-    ok(!db.objectStoreNames.contains('dogs'), "Deletes the store");
+    ok(!db.hasObjectStore('dogs'), "Deletes the store");
 
     start();
   });

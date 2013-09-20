@@ -16,7 +16,7 @@ asyncTest("API", function() {
 
     equal(db.name, 'foo', "EIDB.Database has name property");
     equal(db.version, 2, "EIDB.Database has version property");
-    ok(db.objectStoreNames.contains('people'), "EIDB.Database has objectStoreNames property");
+    ok(db.hasObjectStore('people'), "EIDB.Database has objectStoreNames property");
   });
 
   EIDB.open('foo', 2).then(function(db) {
@@ -27,7 +27,7 @@ asyncTest("API", function() {
   EIDB.open('foo', 3, function(db) {
     db.deleteObjectStore('people');
   }).then(function(db) {
-    ok(!db.objectStoreNames.contains('people'), "EIDB.Database can delete an object store");
+    ok(!db.hasObjectStore('people'), "EIDB.Database can delete an object store");
 
     start();
     EIDB.delete('foo');

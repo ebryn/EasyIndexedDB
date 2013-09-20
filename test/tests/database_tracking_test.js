@@ -38,7 +38,7 @@ asyncTest('Adding - No initial tracking database', function() {
 });
 
 asyncTest('Adding - Initial tracking database exists', function() {
-  expect(1);
+  expect(2);
 
   EIDB.on('dbWasTracked', function zzz() {
     EIDB.off('dbWasTracked', zzz);
@@ -49,7 +49,14 @@ asyncTest('Adding - Initial tracking database exists', function() {
 
       equal(res.name, 'foo', "The db's name is tracked.");
 
+      EIDB.registerErrorHandler(errorHandler);  // test_helper
+      return EIDB.getRecord('foo', 'kids', 1);
+    }).then(function() {
+
+      ok(!errorHandler.error, 'No error is encountered when opening a db that is aleard being tracked.');
+
       start();
+      EIDB.registerErrorHandler.clearHandlers();
       EIDB.delete('foo');
     });
   });
@@ -57,8 +64,7 @@ asyncTest('Adding - Initial tracking database exists', function() {
   EIDB.open(tdbName, null, function(db) {
     db.createObjectStore(tstoreName, {keyPath: 'name'});
   }).then(function() {
-
-    EIDB.open('foo');
+    EIDB.createObjectStore('foo', 'kids');
   });
 });
 
@@ -72,6 +78,7 @@ asyncTest('Removing', function() {
       EIDB.off('dbWasUntracked', zzz);
 
       EIDB.getRecord(tdbName, tstoreName, 'bar').then(function(record) {
+
         ok(!record, "The deleted db was untracked");
 
         start();

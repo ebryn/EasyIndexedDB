@@ -21,7 +21,7 @@ asyncTest('Adding - No initial tracking database', function() {
     EIDB.off('dbWasTracked', zzz);
 
     EIDB.open(tdbName).then(function(db) {
-      ok(db.objectStoreNames.contains(tstoreName), 'EIDB will internally track created databases and store');
+      ok(db.hasObjectStore(tstoreName), 'EIDB will internally track created databases and store');
       var store = db.objectStore(tstoreName);
 
       return store.get('foo');
@@ -92,7 +92,7 @@ asyncTest('when turned off', function() {
   EIDB.open('foo').then(function() {
     setTimeout(function() {
       EIDB.open(tdbName).then(function(db) {
-        ok(!db.objectStoreNames.contains(tstoreName), "The db was not tracked");
+        ok(!db.hasObjectStore(tstoreName), "The db was not tracked");
 
         start();
         EIDB.delete('foo');

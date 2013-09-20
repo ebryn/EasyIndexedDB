@@ -94,6 +94,10 @@ define("eidb/database",
 
       "delete": function(objectStore, id) {
         return this.objectStore(objectStore).delete(id);
+      },
+
+      hasObjectStore: function(name) {
+        return this.objectStoreNames.contains(name);
       }
     };
 
@@ -110,22 +114,23 @@ define("eidb/database_tracking",
         TRACKING_DB_NAME = '__eidb__',
         TRACKING_DB_STORE_NAME = 'databases';
 
+    function __addNameToDb(db, target, eidb) {
+      return db.add(TRACKING_DB_STORE_NAME, target.name, {})
+               .then(function() { eidb.trigger('dbWasTracked'); });
+    }
+
     function _trackDb(target, resolve) {
       var EIDB = window.EIDB;
 
       if (target.name === TRACKING_DB_NAME) { return; }
 
       EIDB.open(TRACKING_DB_NAME).then(function(db) {
-        if (db.objectStoreNames.contains(TRACKING_DB_STORE_NAME)) {
-          return db.add(TRACKING_DB_STORE_NAME, target.name, {}).then(function(res) {
-            EIDB.trigger('dbWasTracked');
-          });
+        if (db.hasObjectStore(TRACKING_DB_STORE_NAME)) {
+          return __addNameToDb(db, target, EIDB);
         }
 
         EIDB.createObjectStore(TRACKING_DB_NAME, TRACKING_DB_STORE_NAME, {keyPath: 'name'}).then(function(db) {
-          return db.add(TRACKING_DB_STORE_NAME, target.name, {});
-        }).then(function() {
-          EIDB.trigger('dbWasTracked');
+          return __addNameToDb(db, target, EIDB);
         });
       });
     }
@@ -216,7 +221,7 @@ define("eidb/eidb",
       }
 
       _warn(true, "EIDB.getDatabaseNames is currently only supported in Chrome" );
-      return RSVP.all([]);
+      return RSVP.resolve([]);
     }
 
     function openOnly(dbName, version, upgradeCallback, opts) {

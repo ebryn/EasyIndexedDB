@@ -1,13 +1,14 @@
 module("Error Handing", {
   setup: function() {
-    EIDB.LOG_ERRORS = false;
-
+    EIDB.ERROR_HANDLING = true;
+    EIDB.ERROR_LOGGING = false;
   },
 
   teardown: function() {
     EIDB.delete('foo');
     EIDB.delete('foo2');
-    EIDB.LOG_ERRORS = true;
+    EIDB.ERROR_HANDLING = false;
+    EIDB.ERROR_LOGGING = true;
   }
 });
 
@@ -146,6 +147,47 @@ asyncTest('EIDB.open', function() {
   });
 });
 
+asyncTest('EIDB.openOnly', function() {
+  expect(1);
+
+  EIDB.open('foo').then(function() {
+    return EIDB.openOnly('foo', -1);
+  }).then(function() {
+
+    ok(EIDB.error, "openOnly error is caught");
+
+    start();
+  });
+});
+
+asyncTest('EIDB.bumpVersion', function() {
+  expect(1);
+
+  EIDB.registerErrorHandler(errorHandler);
+
+  EIDB.bumpVersion('foo', function() {
+    throw new TypeError;
+  }).then(function() {
+
+    ok(errorHandler.error, "bumpVersion error is caught");
+
+    start();
+    EIDB.registerErrorHandler.clearHandlers();
+  });
+});
+
+asyncTest('EIDB.storeAction', function() {
+  expect(1);
+
+  EIDB.storeAction('foo', 'nope').then(function() {
+
+    ok(EIDB.error, 'storeAction error is caught');
+
+    start();
+  });
+});
+
+
 asyncTest('EIDB.registerErrorHandler (RSVP error)', function() {
   expect(1);
 
@@ -174,5 +216,4 @@ asyncTest('EIDB.registerErrorHandler (_request error)', function() {
     var store = db.objectStore('storez');
     store.add(1, 1);
   });
-
 });

@@ -64,6 +64,7 @@ For asynchronous commands, if you do not need to handle the results of a command
 * `open(dbName, version, upgradeCallback, opts)`
 * `openOnly(dbName, version, upgradeCallback, opts)`: In Chrome, this will not create a database if the requested one does not exist. For other browsers, it will fall back to `open`.
 * `bumpVersion(dbName, upgradeCallback, opts)`: creates a new database version and allows you to perform upgrade actions on the database.
+* `storeAction(dbName, storeName, callback, openOpts)`: object store is provided as the parameter in the callback function. (Not to be used for "onupgradeneeded" actions.)
 * `version(dbName)`
 * `delete(dbName)`
 * `createObjectStore(dbName, storeName, storeOpts)`
@@ -144,15 +145,16 @@ If you search for records through `EIDB.find`, EIDB will automatically created t
 
 ## Error Handing
 
-If an error is encountered during an IndexedDB request, EIDB will catch it. If `EIDB.LOG_ERRORS = true` (default), then you will see error information in the browser console.
-
-If you want to process the error in your application, then you can register an error handler with EIDB.
+EIDB can funnel error handling into one place by setting `EIDB.ERROR_HANDLING = true' (false by default.) If you want to process the error in your application, then you can register an error handler with EIDB.
 
 ```javascript
 EIDB.registerErrorHandler(function(err) {
    /* have the app process the error */
 });
 ```
+
+If `EIDB.ERROR_LOGGING = true` (default), then you will see error information in the browser console as well.
+
 ## Working Closer to the IndexedDB API
 EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line object stores are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:
 

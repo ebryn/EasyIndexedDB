@@ -1,4 +1,3 @@
-
 module("database tracking", {
   setup: function() {
     EIDB.DATABASE_TRACKING = true
@@ -53,7 +52,7 @@ asyncTest('Adding - Initial tracking database exists', function() {
       return EIDB.getRecord('foo', 'kids', 1);
     }).then(function() {
 
-      ok(!errorHandler.error, 'No error is encountered when opening a db that is aleard being tracked.');
+      ok(!errorHandler.error, 'No error is encountered when opening a db that is already being tracked.');
 
       start();
       EIDB.registerErrorHandler.clearHandlers();
@@ -69,23 +68,39 @@ asyncTest('Adding - Initial tracking database exists', function() {
 });
 
 asyncTest('Removing', function() {
-  expect(1);
+  expect(2);
 
-  EIDB.on('dbWasTracked', function zzz() {
-    EIDB.off('dbWasTracked', zzz);
+  EIDB.on('trackingDbDeletedError', function zzz(ev) {
+    if (ev.detail === 'baz') {
+      EIDB.off('trackingDbDeletedError', zzz);
 
-    EIDB.on('dbWasUntracked', function zzz() {
-      EIDB.off('dbWasUntracked', zzz);
+      ok(true, 'Error is caught and trackingDbDeletedError event is triggered if tracking is db deleted and then another existing db is then deleted');
 
-      EIDB.getRecord(tdbName, tstoreName, 'bar').then(function(record) {
+      start();
+    }
+  });
 
-        ok(!record, "The deleted db was untracked");
+  EIDB.on('dbWasTracked', function zzz(ev) {
+    if (ev.detail === 'bar') {
+      EIDB.off('dbWasTracked');
 
-        start();
+      EIDB.on('dbWasUntracked', function zzz() {
+        EIDB.off('dbWasUntracked', zzz);
+
+        EIDB.getRecord(tdbName, tstoreName, 'bar').then(function(record) {
+
+          ok(!record, "The deleted db was untracked");
+
+          EIDB.open('baz').then(function() {
+            return EIDB.delete(tdbName);
+          }).then(function() {
+            return EIDB.delete('baz');
+          });
+        });
       });
-    });
 
-    EIDB.delete('bar');
+      EIDB.delete('bar');
+    }
   });
 
   EIDB.open('bar');
@@ -102,11 +117,13 @@ asyncTest('Removing tracking db', function() {
     start();
   });
 
-  EIDB.open('bar').then(function() {
-    return EIDB.delete(tdbName);
-  }).then(function() {
-    return EIDB.delete('bar');
-  });
+  setTimeout(function() {
+    EIDB.open('baz').then(function() {
+      return EIDB.delete(tdbName);
+    }).then(function() {
+      return EIDB.delete('baz');
+    });
+  }, 20);
 });
 
 asyncTest('when turned off', function() {
@@ -122,6 +139,6 @@ asyncTest('when turned off', function() {
         start();
         EIDB.delete('foo');
       });
-    }, 30);
+    }, 50);
   });
 });

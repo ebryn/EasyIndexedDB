@@ -367,7 +367,8 @@ asyncTest('combined ranges', function() {
 
     deepEqual(res, expected, ".find accepts a #gt and #lt calls for the same property");
 
-    EIDB.LOG_ERRORS = false;
+    EIDB.ERROR_HANDLING = true;
+    EIDB.ERROR_LOGGING = false;
     return EIDB.find('foo', 'kids')
                .lt('id', 2)
                .gt('id', 4)
@@ -376,7 +377,8 @@ asyncTest('combined ranges', function() {
 
     ok(true, "EIDB catches a range error");
 
-    EIDB.LOG_ERRORS = true;
+    EIDB.ERROR_HANDLING = false;
+    EIDB.ERROR_LOGGING = true;
     start();
   });
 });

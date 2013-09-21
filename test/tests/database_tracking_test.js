@@ -91,6 +91,24 @@ asyncTest('Removing', function() {
   EIDB.open('bar');
 });
 
+asyncTest('Removing tracking db', function() {
+  expect(1);
+
+  EIDB.on('trackingDbDeletedError', function zzz() {
+    EIDB.off('trackingDbDeletedError', zzz);
+
+    ok(true, 'Error is caught and trackingDbDeletedError event should trigger if tracking is db deleted and then another existing db is then deleted');
+
+    start();
+  });
+
+  EIDB.open('bar').then(function() {
+    return EIDB.delete(tdbName);
+  }).then(function() {
+    return EIDB.delete('bar');
+  });
+});
+
 asyncTest('when turned off', function() {
   expect(1);
 

@@ -63,7 +63,7 @@ For asynchronous commands, if you do not need to handle the results of a command
 * `open(dbName, version, upgradeCallback, opts)`
 * `openOnly(dbName, version, upgradeCallback, opts)`: In Chrome, this will not create a database if the requested one does not exist. For other browsers, it will fall back to `open`.
 * `bumpVersion(dbName, upgradeCallback, opts)`: creates a new database version and allows you to perform upgrade actions on the database.
-* `storeAction(dbName, storeName, callback, openOpts)`: object store is provided as the parameter in the callback function. (Not to be used for "onupgradeneeded" actions.)
+* `storeAction(dbName, storeName, callback, openOpts)`: Object store is provided as the parameter in the callback function. (Not to be used for "onupgradeneeded" actions.)
 * `version(dbName)`
 * `delete(dbName)`
 * `createObjectStore(dbName, storeName, storeOpts)`
@@ -153,6 +153,12 @@ EIDB.registerErrorHandler(function(err) {
 ```
 
 If `EIDB.ERROR_LOGGING = true` (default), then you will see error information in the browser console as well.
+
+## Database Tracking
+
+Currently, only Chrome natively supports retrieving the names of the databases that aleady exists. If your web app allows end users to create their own databases, then you'll need to manually keep track of those databases in browsers such as Firefox.
+
+IF `EIDB.DATABASE_TRACKING` is set to true, EIDB will keep track of the names of databases created through EIDB in a database called "__eidb__". (Databases created directly though the IndexedDB API will not be tracked.)
 
 ## Working Closer to the IndexedDB API
 EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line object stores are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:

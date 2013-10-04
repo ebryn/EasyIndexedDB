@@ -175,19 +175,19 @@ asyncTest("simpler APIs", function() {
 });
 
 asyncTest('ObjectStore API - indexes', function() {
-  expect(5);
+  expect(7);
 
   EIDB.open('foo', 1, function(db) {
-    start();
-    var index, indexNames,
+    var _index, index, indexNames,
         store = db.createObjectStore("people", { keyPath: "myId" });
 
-    store.createIndex('by_name', 'name', {unique: true});
+    _index = store.createIndex('by_name', 'name', {unique: true});
 
     index = store.index('by_name');
     indexNames = store.indexNames;
 
-    ok(index instanceof IDBIndex, "#index returns an IDBIndex");
+    ok(_index instanceof EIDB.Index, "#createIndex returns an EIDB.Index");
+    ok(index instanceof EIDB.Index, "#index returns an EIDB.Index");
     ok(index.unique, '#createIndex passes along params');
     ok(indexNames instanceof DOMStringList, "#indexNames returns a DOMStringList");
     ok(indexNames.contains('by_name'), '#indexNames contains the names of the indexes');
@@ -195,6 +195,88 @@ asyncTest('ObjectStore API - indexes', function() {
     store.deleteIndex('by_name');
     ok(!store.indexNames.contains('by_name'), '#deleteIndex removes the index');
 
+    store.createIndex('by_name', 'name', {unique: true});
+    db.close();
+
+    EIDB.open('foo', 2).then(function(db) {
+      var store = db.transaction('people').objectStore('people');
+      ok(store.indexNames.contains('by_name'), "new store object finds an existing index");
+
+      db.close();
+      start();
+    });
+  });
+});
+
+asyncTest('Index API - properties', function() {
+  expect(5);
+
+  EIDB.open('foo', 1, function(db) {
+    var store = db.createObjectStore("people", {keyPath: "id"});
+    var index = store.createIndex('by_name', 'name', {unique: true, multiEntry: true });
+
+    equal(index.name, 'by_name', "name property is correct");
+    equal(index.objectStore, index._idbIndex.objectStore, "objectStore property is correct");
+    equal(index.keyPath, 'name', "keyPath property is correct");
+    ok(index.multiEntry, "multiEntry property is correct");
+    ok(index.unique, 'unique property is correct');
+
+    start();
+    db.close();
+  });
+});
+
+asyncTest('Index API - requests', function() {
+  expect(11);
+
+  EIDB.open('foo', 1, function(db) {
+    var store = db.createObjectStore("people", {keyPath: "id"});
+    store.createIndex('by_name', 'name');
+  }).then(function(db) {
+    db.add('people', 1, {name: "Erik"});
+    db.add('people', 2, {name: "Erik"});
+    db.add('people', 3, {name: "Kris"});
+    db.close();
+
+    return EIDB.open('foo');
+  }).then(function(db) {
+    var tx = db.transaction('people');
+    var index = tx.objectStore('people').index('by_name');
+
+    index.openCursor('Erik', 'prev').then(function(cursor) {
+      equal(cursor.key, 'Erik', "#openCursor range param is passed");
+      equal(cursor.direction, 'prev', "#openCursor direction param is passed");
+      ok('value' in cursor, "#openCursor provides a result value");
+    });
+
+    index.openKeyCursor('Erik', 'prev').then(function(cursor) {
+      equal(cursor.key, 'Erik', "#openKeyCursor range param is passed");
+      equal(cursor.direction, 'prev', "#openKeyCursor direction param is passed");
+      ok(!('value' in cursor), "#openKeyCursor doesn't provide a result value");
+    });
+
+    index.get('Erik').then(function(obj) {
+      equal(obj.id, 1, "#get returns the first matched record");
+    });
+
+    index.getKey('Erik').then(function(obj){
+      equal(obj, 1, "#getKey returns the first matched key");
+    });
+
+    index.count('Erik').then(function(count) {
+      equal(count, 2, "#count returns the number of matched records");
+    });
+
+    index.count().then(function(count) {
+      equal(count, 3, "#count returns the total number of records if no key given");
+    })
+
+    index.getAll('Erik').then(function(result) {
+      expected = [{id: 1, name: "Erik"}, {id:2, name: "Erik"}]
+      deepEqual(result, expected, "#getAll collects the #openCursor results");
+    });
+
+    start();
     db.close();
   });
 });

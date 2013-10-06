@@ -19,7 +19,8 @@ module.exports = function(config) {
     plugins: [
       'karma-qunit',
       'karma-chrome-launcher',
-      'karma-firefox-launcher'
+      'karma-firefox-launcher',
+      'karma-opera-launcher'
     ],
 
     // list of files to exclude

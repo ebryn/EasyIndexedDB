@@ -44,7 +44,7 @@ module.exports = function(grunt) {
       },
       multiple: {
         singleRun: true,
-        browsers: ['ChromeCanary', 'Chrome', 'Firefox']
+        browsers: ['ChromeCanary', 'Chrome', 'Firefox', 'Opera']
       },
       server: {
         background: true

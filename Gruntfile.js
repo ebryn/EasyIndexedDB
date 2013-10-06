@@ -1,8 +1,10 @@
 module.exports = function(grunt) {
   grunt.registerTask('test:server', 'Autorun tests on ChromeCanary',
                      ['build', 'concat:tests', 'karma:server', 'watch:test']);
-  grunt.registerTask('test:all', 'Run tests once on ChromeCanary, Chrome and Firefox',
+  grunt.registerTask('test:all', 'Run tests once on ChromeCanary, Chrome, Firefox and Opera',
                      ['build', 'concat:tests', 'karma:multiple']);
+  grunt.registerTask('test:safari', 'Run tests once on Safari using IndexedDBShim',
+                     ['build', 'concat:tests', 'karma:safari']);
 
   grunt.loadNpmTasks('grunt-microlib');
   grunt.loadNpmTasks('grunt-karma');
@@ -46,9 +48,14 @@ module.exports = function(grunt) {
         singleRun: true,
         browsers: ['ChromeCanary', 'Chrome', 'Firefox', 'Opera']
       },
+      safari: {
+        configFile: 'safari.karma.conf.js',
+        browsers: ['Safari'],
+        singleRun: true
+      },
       server: {
         background: true
-      },
+      }
     }
   };
 

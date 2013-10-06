@@ -26,7 +26,8 @@
     "karma": "~0.9.4",
     "grunt-karma": "~0.5",
     "karma-qunit": "~0.0.3",
-    "karma-opera-launcher": "~0.1"
+    "karma-opera-launcher": "~0.1",
+    "karma-safari-launcher": "~0.1.1"
   },
   "license": "MIT"
 }

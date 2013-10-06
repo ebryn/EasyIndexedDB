@@ -915,7 +915,7 @@ define("eidb/indexed_db",
   ["exports"],
   function(__exports__) {
     "use strict";
-    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.IndexedDB;
 
 
     __exports__.indexedDB = indexedDB;

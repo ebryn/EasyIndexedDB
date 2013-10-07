@@ -879,8 +879,6 @@ define("eidb/indexed_db",
   function(__exports__) {
     "use strict";
     var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.IndexedDB;
-
-
     __exports__.indexedDB = indexedDB;
   });
 define("eidb/object_store",

@@ -10,6 +10,8 @@ Information about working with IndexedDB can be found at the [Mozilla Developer 
 
 EIDB uses the [RSVP.js promise](https://github.com/tildeio/rsvp.js) implementation to handle asynchronous calls to IndexedDB.
 
+You will need to add the RSVP.js source code separately. If you are using Ember, then just place the EIDB source code after Ember since RSVP is included in Ember.
+
 ## Basic Usage
 
 For asynchronous commands, if you do not need to handle the results of a command, then simply call the command. If you need to handle the results as soon as they become available, you will need to chain a `.then` call.
@@ -39,7 +41,7 @@ For asynchronous commands, if you do not need to handle the results of a command
     `.addRecord` also accepts an array of records:
 
     ```javascript
-    var records = [{name: 'Kyle', name: 'Cartman'}];
+    var records = [{name: 'Kyle'}, {name: 'Cartman'}];
     EIDB.addRecord('myDB' 'kids', records).then(function(ids) {
       // the return value is an array of the keys (ids) of the newly created records
     });
@@ -81,7 +83,7 @@ For asynchronous commands, if you do not need to handle the results of a command
 
 ## Basic Queries
 
-Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
+Say your records look something like this `{id: 1, name: 'Stan', color: 'red'}`
 
 * Find records that have an exact value
 
@@ -119,22 +121,22 @@ Say your records look something like this {id: 1, name: 'Stan', color: 'red'}
     * `lte`: less than or equal to
     * `range`: combines `gte` and `lte`
 
-    ```javascript
-    .range('id', [10,20])
-    ```
+        ```javascript
+        .range('id', [10,20])
+        ```
 
     * `match`: test a record against a regular expression
     * `filter`: create your own filter
 
-    ```javascript
-    .filter(function(record) { return record.name.first === 'Chef'})
-    ```
+        ```javascript
+        .filter(function(record) { return record.name.first === 'Chef'})
+        ```
 
     * `run`: run the query. If you want to run the query in reverse direction pass it a 'prev' argument
 
-    ```javascript
-    .run('prev')
-    ```
+        ```javascript
+        .run('prev')
+        ```
 
     * `first`: use this instead of `run` to get just the first record
     * `last`: use this instead of `run` to get just the last record

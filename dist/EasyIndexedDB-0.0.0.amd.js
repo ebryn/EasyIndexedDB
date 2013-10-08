@@ -105,11 +105,12 @@ define("eidb/database",
     __exports__.Database = Database;
   });
 define("eidb/database_tracking",
-  ["eidb/promise","eidb/error_handling","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["eidb/promise","eidb/error_handling","eidb/hook","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var RSVP = __dependency1__.RSVP;
     var _handleErrors = __dependency2__._handleErrors;
+    var hook = __dependency3__.hook;
 
     var DATABASE_TRACKING = false,
         DB_NAME = '__eidb__',
@@ -135,10 +136,10 @@ define("eidb/database_tracking",
       };
     }
 
-    function _trackDb(target) {
-      if (target.name === DB_NAME) { return; }
-
+    function __trackDb(target) {
       var EIDB = window.EIDB;
+
+      if (target.name === DB_NAME || !EIDB.DATABASE_TRACKING) { return; }
 
       __addNameToDb(target, EIDB)()
         .then(null, __createStore(EIDB))
@@ -147,11 +148,12 @@ define("eidb/database_tracking",
         .then(function() { EIDB.trigger('dbWasTracked', target.name); });
     }
 
-    _trackDb.remove = function(dbName) {
-      if (dbName === DB_NAME) { return; }
-
+    function __removeDB(evtResult, method, args) {
       var EIDB = window.EIDB,
-          oldErrorHandling = EIDB.ERROR_HANDLING;
+          oldErrorHandling = EIDB.ERROR_HANDLING,
+          dbName = args && args[0];
+
+      if (dbName === DB_NAME || method !== 'deleteDatabase' || !EIDB.DATABASE_TRACKING) { return; }
 
       EIDB.open(DB_NAME).then(function(db) {
 
@@ -168,14 +170,16 @@ define("eidb/database_tracking",
         EIDB.ERROR_HANDLING = oldErrorHandling;
         EIDB.trigger('trackingDbDeletedError', dbName);
       });
-    };
+    }
+
+    hook.addBeforeHook('EIDB.open.onsuccess', __trackDb);
+    hook.addBeforeHook('EIDB._request.onsuccess', __removeDB);
 
 
-    __exports__._trackDb = _trackDb;
     __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
   });
 define("eidb/eidb",
-  ["eidb/indexed_db","eidb/promise","eidb/database","eidb/utils","eidb/error_handling","eidb/database_tracking","exports"],
+  ["eidb/indexed_db","eidb/promise","eidb/database","eidb/utils","eidb/error_handling","eidb/hook","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
     var indexedDB = __dependency1__.indexedDB;
@@ -186,7 +190,7 @@ define("eidb/eidb",
     var _request = __dependency4__._request;
     var __instrument__ = __dependency4__.__instrument__;
     var _rsvpErrorHandler = __dependency5__._rsvpErrorHandler;
-    var _trackDb = __dependency6__._trackDb;
+    var hook = __dependency6__.hook;
 
     function open(dbName, version, upgradeCallback, opts) {
       return new Promise(function(resolve, reject) {
@@ -196,10 +200,7 @@ define("eidb/eidb",
         req.onsuccess = function(event) {
           var db = new Database(req.result);
 
-          EIDB.error = null;
-          if (EIDB.DATABASE_TRACKING === true) { _trackDb(db); }
-
-          resolve(db);
+          hook('EIDB.open.onsuccess', resolve, db);
 
           if (!opts || (opts && !opts.keepOpen)) {
             setTimeout(function() {
@@ -211,11 +212,11 @@ define("eidb/eidb",
           reject(event);
         };
         req.onupgradeneeded = function(event) {
-          EIDB.error = null;
-
           var db = new Database(req.result),
               ret = (opts && opts.returnEvent) ? {db: db, event: event} : db;
-          if (upgradeCallback) { upgradeCallback(ret); }
+          if (upgradeCallback) {
+            hook('EIDB.open.onupgradeneeded', upgradeCallback, ret);
+          }
         };
       }).then(null, _rsvpErrorHandler(indexedDB, "open", [dbName, version, upgradeCallback, opts]));
     }
@@ -414,10 +415,11 @@ define("eidb/eidb",
     __exports__.storeAction = storeAction;
   });
 define("eidb/error_handling",
-  ["eidb/promise","exports"],
-  function(__dependency1__, __exports__) {
+  ["eidb/promise","eidb/hook","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     var RSVP = __dependency1__.RSVP;
+    var hook = __dependency2__.hook;
 
     var ERROR_HANDLING = false;
     var ERROR_LOGGING = true;
@@ -454,13 +456,13 @@ define("eidb/error_handling",
       var EIDB = window.EIDB,
           message = null;
 
-         if (e.message) {
-          message = e.message;
-        }
+      if (e.message) {
+        message = e.message;
+      }
 
-        if (e.target && e.target.error && e.target.error.message) {
-          message = e.target.error.message;
-        }
+      if (e.target && e.target.error && e.target.error.message) {
+        message = e.target.error.message;
+      }
 
       return message;
     }
@@ -504,6 +506,19 @@ define("eidb/error_handling",
     registerErrorHandler.clearHandlers = function() {
       registerErrorHandler.handlers = [];
     };
+
+    function _clearError() {
+      window.EIDB.error = null;
+    }
+
+    [
+      'EIDB.open.onsuccess',
+      'EIDB.open.onupgradeneeded',
+      'EIDB._request.onsuccess',
+      'EIDB._openCursor.onsuccess'
+    ].forEach(function(type) {
+      hook.addBeforeHook(type, _clearError);
+    });
 
 
     __exports__.ERROR_HANDLING = ERROR_HANDLING;
@@ -815,6 +830,51 @@ define("eidb/find",
 
     __exports__.find = find;
   });
+define("eidb/hook",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    var __args,
+        __slice = Array.prototype.slice,
+        __beforeHooks = {},
+        __afterHooks = {};
+
+    function __applyHook(hook) {
+      hook.apply(hook, __args);
+    }
+
+    function hook(eventName, fn) {
+      __args = __slice.call(arguments, 2);
+      var beforeEventHooks = __beforeHooks[eventName];
+      var afterEventHooks = __afterHooks[eventName];
+      var ret;
+
+      if (beforeEventHooks) {
+        beforeEventHooks.forEach(__applyHook);
+      }
+
+      ret = fn.apply(fn, __args);
+
+      if (afterEventHooks) {
+        afterEventHooks.forEach(__applyHook);
+      }
+
+      return ret;
+    }
+
+    hook.addBeforeHook = function(eventName, hook) {
+      var hooks = __beforeHooks[eventName] = __beforeHooks[eventName] || [];
+      hooks.push(hook);
+    };
+
+    hook.addAfterHook = function(eventName, hook) {
+      var hooks = __afterHooks[eventName] = __afterHooks[eventName] || [];
+      hooks.push(hook);
+    };
+
+
+    __exports__.hook = hook;
+  });
 define("eidb/index",
   ["eidb/promise","eidb/utils","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
@@ -879,6 +939,8 @@ define("eidb/indexed_db",
   function(__exports__) {
     "use strict";
     var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.IndexedDB;
+
+
     __exports__.indexedDB = indexedDB;
   });
 define("eidb/object_store",
@@ -1079,12 +1141,12 @@ define("eidb/transaction",
     __exports__.Transaction = Transaction;
   });
 define("eidb/utils",
-  ["eidb/promise","eidb/error_handling","eidb/database_tracking","exports"],
+  ["eidb/promise","eidb/error_handling","eidb/hook","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var Promise = __dependency1__.Promise;
     var _rsvpErrorHandler = __dependency2__._rsvpErrorHandler;
-    var _trackDb = __dependency3__._trackDb;
+    var hook = __dependency3__.hook;
 
     function __instrument__(methodCallback) {
       if (__instrument__.setup) {
@@ -1105,10 +1167,7 @@ define("eidb/utils",
         var req = idbObj[method].apply(idbObj, _args);
 
         req.onsuccess = function(evt) {
-          EIDB.error = null;
-          if (method === 'deleteDatabase' && EIDB.DATABASE_TRACKING === true) { _trackDb.remove(args[0]); }
-
-          resolve(evt.target.result);
+          hook('EIDB._request.onsuccess', resolve, evt.target.result, method, args);
         };
         req.onerror = function(evt) {
           reject(evt);
@@ -1127,8 +1186,7 @@ define("eidb/utils",
         var req = idbObj[method](range, direction);
 
         req.onsuccess = function(event) {
-          EIDB.error = null;
-          onsuccess(event.target.result, resolve);
+          hook('EIDB._openCursor.onsuccess', onsuccess, event.target.result, resolve);
         };
         req.onerror = function(event) {
           reject(event);
@@ -1198,8 +1256,8 @@ define("eidb/utils",
     __exports__._hasKeyPath = _hasKeyPath;
   });
 define("eidb",
-  ["eidb/eidb","eidb/find","eidb/database","eidb/object_store","eidb/transaction","eidb/index","eidb/utils","eidb/error_handling","eidb/promise","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __exports__) {
+  ["eidb/eidb","eidb/find","eidb/database","eidb/object_store","eidb/transaction","eidb/index","eidb/utils","eidb/error_handling","eidb/promise","eidb/database_tracking","eidb/hook","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __exports__) {
     "use strict";
     var open = __dependency1__.open;
     var _delete = __dependency1__._delete;
@@ -1226,10 +1284,12 @@ define("eidb",
     var Index = __dependency6__.Index;
     var __instrument__ = __dependency7__.__instrument__;
     var ERROR_HANDLING = __dependency8__.ERROR_HANDLING;
-    var LOG_ERRORS = __dependency8__.LOG_ERRORS;
+    var ERROR_LOGGING = __dependency8__.ERROR_LOGGING;
     var error = __dependency8__.error;
     var registerErrorHandler = __dependency8__.registerErrorHandler;
     var RSVP = __dependency9__.RSVP;
+    var DATABASE_TRACKING = __dependency10__.DATABASE_TRACKING;
+    var hook = __dependency11__.hook;
 
     __exports__.delete = _delete;
 
@@ -1264,9 +1324,11 @@ define("eidb",
     __exports__.Index = Index;
     __exports__.__instrument__ = __instrument__;
     __exports__.ERROR_HANDLING = ERROR_HANDLING;
-    __exports__.LOG_ERRORS = LOG_ERRORS;
+    __exports__.ERROR_LOGGING = ERROR_LOGGING;
     __exports__.error = error;
     __exports__.registerErrorHandler = registerErrorHandler;
     __exports__.getIndexes = getIndexes;
     __exports__.find = find;
+    __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
+    __exports__.hook = hook;
   });

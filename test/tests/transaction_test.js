@@ -1,4 +1,7 @@
 module("Transaction", {
+  setup: function() {
+    EIDB.delete('foo');
+  },
   teardown: function() {
     EIDB.delete('foo');
   }

@@ -1,4 +1,11 @@
-module("Database");
+module("Database", {
+  setup: function() {
+    EIDB.delete('foo');
+  },
+  teardown: function() {
+    EIDB.delete('foo');
+  }
+});
 
 asyncTest("API", function() {
   expect(7);
@@ -30,7 +37,6 @@ asyncTest("API", function() {
     ok(!db.hasObjectStore('people'), "EIDB.Database can delete an object store");
 
     start();
-    EIDB.delete('foo');
   });
 });
 
@@ -69,7 +75,6 @@ asyncTest("CRUD records", function() {
 
       db.close();
       start();
-      EIDB.delete('foo');
     });
   });
 });

@@ -1,4 +1,8 @@
 module("ObjectStore", {
+  setup: function() {
+    EIDB.delete('foo');
+    EIDB.delete('foo2');
+  },
   teardown: function() {
     EIDB.delete('foo');
     EIDB.delete('foo2');

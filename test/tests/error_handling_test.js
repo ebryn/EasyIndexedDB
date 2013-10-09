@@ -1,5 +1,7 @@
 module("Error Handing", {
   setup: function() {
+    EIDB.delete('foo');
+    EIDB.delete('foo2');
     EIDB.ERROR_HANDLING = true;
     EIDB.ERROR_LOGGING = false;
   },

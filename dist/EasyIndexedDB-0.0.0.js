@@ -209,8 +209,8 @@ define("eidb/database_tracking",
       });
     }
 
-    hook.addBeforeHook('EIDB.open.onsuccess', __trackDb);
-    hook.addBeforeHook('EIDB._request.onsuccess', __removeDB);
+    hook.addHook('open.onsuccess.before', __trackDb);
+    hook.addHook('_request.onsuccess.before', __removeDB);
 
 
     __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
@@ -237,7 +237,7 @@ define("eidb/eidb",
         req.onsuccess = function(event) {
           var db = new Database(req.result);
 
-          hook('EIDB.open.onsuccess', resolve, db);
+          hook('open.onsuccess', resolve, db);
 
           if (!opts || (opts && !opts.keepOpen)) {
             setTimeout(function() {
@@ -252,7 +252,7 @@ define("eidb/eidb",
           var db = new Database(req.result),
               ret = (opts && opts.returnEvent) ? {db: db, event: event} : db;
           if (upgradeCallback) {
-            hook('EIDB.open.onupgradeneeded', upgradeCallback, ret);
+            hook('open.onupgradeneeded', upgradeCallback, ret);
           }
         };
       }).then(null, _rsvpErrorHandler(indexedDB, "open", [dbName, version, upgradeCallback, opts]));
@@ -539,12 +539,12 @@ define("eidb/error_handling",
     }
 
     [
-      'EIDB.open.onsuccess',
-      'EIDB.open.onupgradeneeded',
-      'EIDB._request.onsuccess',
-      'EIDB._openCursor.onsuccess'
+      'open.onsuccess.before',
+      'open.onupgradeneeded.before',
+      '_request.onsuccess.before',
+      '_openCursor.onsuccess.before'
     ].forEach(function(type) {
-      hook.addBeforeHook(type, _clearError);
+      hook.addHook(type, _clearError);
     });
 
 
@@ -858,45 +858,35 @@ define("eidb/find",
     __exports__.find = find;
   });
 define("eidb/hook",
-  ["exports"],
-  function(__exports__) {
+  ["eidb/promise","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var __args,
-        __slice = Array.prototype.slice,
-        __beforeHooks = {},
-        __afterHooks = {};
+    var RSVP = __dependency1__.RSVP;
 
-    function __applyHook(hook) {
-      hook.apply(hook, __args);
+    var __args,
+        __slice = Array.prototype.slice;
+
+    function __trigger(eventName) {
+      hook.trigger(eventName, { args: __args });
     }
 
     function hook(eventName, fn) {
-      __args = __slice.call(arguments, 2);
-      var beforeEventHooks = __beforeHooks[eventName];
-      var afterEventHooks = __afterHooks[eventName];
       var ret;
+      __args = __slice.call(arguments, 2);
 
-      if (beforeEventHooks) {
-        beforeEventHooks.forEach(__applyHook);
-      }
-
+      __trigger(eventName + '.before');
       ret = fn.apply(fn, __args);
-
-      if (afterEventHooks) {
-        afterEventHooks.forEach(__applyHook);
-      }
+      __trigger(eventName + '.after');
 
       return ret;
     }
 
-    hook.addBeforeHook = function(eventName, hook) {
-      var hooks = __beforeHooks[eventName] = __beforeHooks[eventName] || [];
-      hooks.push(hook);
-    };
+    RSVP.EventTarget.mixin(hook);
 
-    hook.addAfterHook = function(eventName, hook) {
-      var hooks = __afterHooks[eventName] = __afterHooks[eventName] || [];
-      hooks.push(hook);
+    hook.addHook = function(eventName, fn) {
+      this.on(eventName, function(evt) {
+        fn.apply(fn, evt.args);
+      });
     };
 
 
@@ -1194,7 +1184,7 @@ define("eidb/utils",
         var req = idbObj[method].apply(idbObj, _args);
 
         req.onsuccess = function(evt) {
-          hook('EIDB._request.onsuccess', resolve, evt.target.result, method, args);
+          hook('_request.onsuccess', resolve, evt.target.result, method, args);
         };
         req.onerror = function(evt) {
           reject(evt);
@@ -1213,7 +1203,7 @@ define("eidb/utils",
         var req = idbObj[method](range, direction);
 
         req.onsuccess = function(event) {
-          hook('EIDB._openCursor.onsuccess', onsuccess, event.target.result, resolve);
+          hook('_openCursor.onsuccess', onsuccess, event.target.result, resolve);
         };
         req.onerror = function(event) {
           reject(event);

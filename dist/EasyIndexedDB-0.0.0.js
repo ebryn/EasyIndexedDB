@@ -311,11 +311,7 @@ define("eidb/eidb",
     }
 
     function bumpVersion(dbName, upgradeCallback, opts) {
-      if (!dbName) {
-        return new Promise(function(resolve){
-          resolve(null);
-        });
-      }
+      if (!dbName) { return RSVP.resolve(null); }
 
       return open(dbName).then(function(db) {
         return open(dbName, db.version + 1, function(res) {
@@ -471,19 +467,16 @@ define("eidb/error_handling",
       try {
         return code(context);
       } catch (e) {
-        var error = EIDB.error = {  // TODO - make an Error object
-          name: e.name,
-          context: context,
-          arguments: args,
-          code: code,
-          error: e
-        };
+        e.context = context;
+        e.arguments = args;
+        e.eidb_code = code;
+        e._message = __createErrorMessage(e);
 
-        error.message = __createErrorMessage(e);
+        EIDB.error = e;
 
-        if (!EIDB.ERROR_HANDLING) { throw error; }
-        if (logErrors && !(opts && opts.stopErrors)) { console.error(error); }
-        if (opts && !opts.stopErrors) { EIDB.trigger('error', error); }
+        if (!EIDB.ERROR_HANDLING) { throw e; }
+        if (logErrors && !(opts && opts.stopErrors)) { console.error(e); }
+        if (opts && !opts.stopErrors) { EIDB.trigger('error', e); }
 
         return false;
       }
@@ -493,9 +486,7 @@ define("eidb/error_handling",
       var EIDB = window.EIDB,
           message = null;
 
-      if (e.message) {
-        message = e.message;
-      }
+      if (e.message) { message = e.message; }
 
       if (e.target && e.target.error && e.target.error.message) {
         message = e.target.error.message;
@@ -509,19 +500,18 @@ define("eidb/error_handling",
           logErrors = EIDB.ERROR_LOGGING;
 
       return function(e) {
-        var error = EIDB.error = {
-          name: "EIDB request " + idbObj + " #" + method + " error",
-          error: e,
-          idbObj: idbObj,
-          arguments: args
-        };
+        var error = new Error();
+        error._name = "EIDB request " + idbObj + " #" + method + " error";
+        error._idbObj = idbObj;
+        error._arguments = args;
+        error._message = __createErrorMessage(e);
+        error.originalError = e;
 
-        error.message = __createErrorMessage(e);
+        if (!EIDB.ERROR_HANDLING) { throw e; }
+        if (logErrors) { console.error(e); }
 
-        if (logErrors) { console.error(error); }
-
-        EIDB.error = error;
-        EIDB.trigger('error', error);
+        EIDB.error = e;
+        EIDB.trigger('error', e);
       };
     }
 

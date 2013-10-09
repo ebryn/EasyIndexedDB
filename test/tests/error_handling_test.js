@@ -19,16 +19,16 @@ asyncTest('ObjectStore', function() {
     var store = db.createObjectStore('bar');
 
     store.index('by_nom');
-    ok(EIDB.error.error instanceof DOMException, "index error is caught");
+    ok(EIDB.error instanceof DOMException, "index error is caught");
 
     store.createIndex('by_name', 'name');
     ok(!EIDB.error, "EIDB.error is cleared after the next direct indexedDB request");
 
     store.createIndex('by_name', 'name');
-    ok(EIDB.error.error instanceof DOMException, "createIndex error is caught");
+    ok(EIDB.error instanceof DOMException, "createIndex error is caught");
 
     store.deleteIndex('by_nom');
-    ok(EIDB.error.error instanceof DOMException, "deleteIndex error is caught");
+    ok(EIDB.error instanceof DOMException, "deleteIndex error is caught");
 
     start();
   });
@@ -43,7 +43,7 @@ asyncTest('ObjectStore', function() {
 
     store.insertWith_key('add', {name: 'baz'}, null, db).then(function() {
 
-      ok(EIDB.error.error instanceof DOMException, "insertWith_key error is caught");
+      ok(EIDB.error instanceof DOMException, "insertWith_key error is caught");
       start();
     });
   });
@@ -57,7 +57,7 @@ asyncTest('Utils', function() {
     var store = db.objectStore('bar');
 
     store.add().then(function() {
-      ok(EIDB.error.error instanceof Object, "_request error is caught");
+      ok(EIDB.error instanceof Object, "_request error is caught");
 
       var _store = db.transaction('bar', 'readwrite').objectStore('bar');
       return _store.add({a:1}, 1);
@@ -75,7 +75,7 @@ asyncTest('Utils', function() {
     var store = db.createObjectStore('bar');
 
     store.openCursor(null, 'errrrr').then(function() {
-      ok(EIDB.error.error instanceof Object, "_openCursor error is caught");
+      ok(EIDB.error instanceof Object, "_openCursor error is caught");
 
       return store.openCursor('eh', null, function(cursor, resolve) {
         resolve();
@@ -95,13 +95,13 @@ asyncTest('Database', function() {
   EIDB.open('foo', 1, function(db) {
     db.createObjectStore("people");
     db.createObjectStore('people');
-    ok(EIDB.error.error instanceof DOMException, "createObjectStore error is caught");
+    ok(EIDB.error instanceof DOMException, "createObjectStore error is caught");
 
     db.deleteObjectStore('dogs');
-    ok(EIDB.error.error instanceof DOMException, "deleteObjectStore error is caught");
+    ok(EIDB.error instanceof DOMException, "deleteObjectStore error is caught");
 
     db.transaction('nope');
-    ok(EIDB.error.error instanceof DOMException, "transaction error is caught");
+    ok(EIDB.error instanceof DOMException, "transaction error is caught");
 
 
     start();
@@ -119,7 +119,7 @@ asyncTest('Transaction', function() {
     tx._idbTransaction.oncomplete = function() {
       tx.abort();
 
-      ok(EIDB.error.error instanceof DOMException, "abort error is caught");
+      ok(EIDB.error instanceof DOMException, "abort error is caught");
       start();
     }
   });
@@ -131,7 +131,7 @@ asyncTest('EIDB.open', function() {
   EIDB.open('foo', 1).then(function() {
     return EIDB.open('foo', -1);
   }).then(function() {
-    ok(EIDB.error.error instanceof Object, "open error is caught");
+    ok(EIDB.error instanceof Object, "open error is caught");
 
     return EIDB.open('foo', 2);
   }).then(function() {

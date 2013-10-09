@@ -150,7 +150,7 @@ If you search for records through `EIDB.find`, EIDB will automatically created t
 EIDB can funnel error handling into one place by setting `EIDB.ERROR_HANDLING = true' (false by default.) If you want to process the error in your application, then you can register an error handler with EIDB.
 
 ```javascript
-EIDB.registerErrorHandler(function(err) {
+EIDB.on('error', function(err) {
    /* have the app process the error */
 });
 ```

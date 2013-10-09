@@ -163,7 +163,7 @@ asyncTest('EIDB.openOnly', function() {
 asyncTest('EIDB.bumpVersion', function() {
   expect(1);
 
-  EIDB.registerErrorHandler(errorHandler);
+  EIDB.on('error', errorHandler);
 
   EIDB.bumpVersion('foo', function() {
     throw new TypeError;
@@ -172,7 +172,7 @@ asyncTest('EIDB.bumpVersion', function() {
     ok(errorHandler.error, "bumpVersion error is caught");
 
     start();
-    EIDB.registerErrorHandler.clearHandlers();
+    EIDB.off('error', errorHandler);
   });
 });
 
@@ -184,36 +184,5 @@ asyncTest('EIDB.storeAction', function() {
     ok(EIDB.error, 'storeAction error is caught');
 
     start();
-  });
-});
-
-
-asyncTest('EIDB.registerErrorHandler (RSVP error)', function() {
-  expect(1);
-
-  EIDB.registerErrorHandler(function(err) {
-    ok(err, "RSVP error was received by the handler");
-
-    start();
-    EIDB.registerErrorHandler.clearHandlers();
-  });
-
-  EIDB.open('foo', -1);
-
-});
-
-asyncTest('EIDB.registerErrorHandler (_request error)', function() {
-  expect(1);
-
-  EIDB.registerErrorHandler(function(err) {
-    ok(err, "Request error was received by the handler");
-
-    start();
-    EIDB.registerErrorHandler.clearHandlers();
-  });
-
-  EIDB.createObjectStore('foo', 'storez', {keyPath: 'id'}).then(function(db) {
-    var store = db.objectStore('storez');
-    store.add(1, 1);
   });
 });

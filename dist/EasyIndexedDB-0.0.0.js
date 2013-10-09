@@ -515,25 +515,6 @@ define("eidb/error_handling",
       };
     }
 
-    function registerErrorHandler(handler) {
-      var handlers = registerErrorHandler.handlers;
-      handlers.push(handler);
-      return true;
-    }
-
-    registerErrorHandler.handlers = [];
-
-    registerErrorHandler.notify = function(e) {
-      var handlers = registerErrorHandler.handlers;
-      handlers.forEach(function(handler) {
-        handler(e);
-      });
-    };
-
-    registerErrorHandler.clearHandlers = function() {
-      registerErrorHandler.handlers = [];
-    };
-
     function _clearError() {
       window.EIDB.error = null;
     }
@@ -551,7 +532,6 @@ define("eidb/error_handling",
     __exports__.ERROR_HANDLING = ERROR_HANDLING;
     __exports__.ERROR_LOGGING = ERROR_LOGGING;
     __exports__.error = error;
-    __exports__.registerErrorHandler = registerErrorHandler;
     __exports__._handleErrors = _handleErrors;
     __exports__._rsvpErrorHandler = _rsvpErrorHandler;
   });
@@ -1303,7 +1283,6 @@ define("eidb",
     var ERROR_HANDLING = __dependency8__.ERROR_HANDLING;
     var ERROR_LOGGING = __dependency8__.ERROR_LOGGING;
     var error = __dependency8__.error;
-    var registerErrorHandler = __dependency8__.registerErrorHandler;
     var RSVP = __dependency9__.RSVP;
     var DATABASE_TRACKING = __dependency10__.DATABASE_TRACKING;
     var hook = __dependency11__.hook;
@@ -1311,10 +1290,6 @@ define("eidb",
     __exports__.delete = _delete;
 
     RSVP.EventTarget.mixin(__exports__);
-
-    __exports__.on('error', function(e) {
-      registerErrorHandler.notify(e);
-    });
 
     // TODO - don't make __instrument__ public. (For now, need it for testing.)
     // TODO - probably don't need to export error. But will need to fix error_hanlding_test.js
@@ -1343,7 +1318,6 @@ define("eidb",
     __exports__.ERROR_HANDLING = ERROR_HANDLING;
     __exports__.ERROR_LOGGING = ERROR_LOGGING;
     __exports__.error = error;
-    __exports__.registerErrorHandler = registerErrorHandler;
     __exports__.getIndexes = getIndexes;
     __exports__.find = find;
     __exports__.DATABASE_TRACKING = DATABASE_TRACKING;

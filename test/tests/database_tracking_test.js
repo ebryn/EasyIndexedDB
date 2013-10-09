@@ -48,14 +48,14 @@ asyncTest('Adding - Initial tracking database exists', function() {
 
       equal(res.name, 'foo', "The db's name is tracked.");
 
-      EIDB.registerErrorHandler(errorHandler);  // test_helper
+      EIDB.on('error', errorHandler);  // test_helper
       return EIDB.getRecord('foo', 'kids', 1);
     }).then(function() {
 
       ok(!errorHandler.error, 'No error is encountered when opening a db that is already being tracked.');
 
       start();
-      EIDB.registerErrorHandler.clearHandlers();
+      EIDB.off('error', errorHandler);
       EIDB.delete('foo');
     });
   });

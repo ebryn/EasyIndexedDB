@@ -1288,8 +1288,10 @@ define("eidb",
     var hook = __dependency11__.hook;
 
     __exports__.delete = _delete;
-
-    RSVP.EventTarget.mixin(__exports__);
+    __exports__.on = hook.on;
+    __exports__.off = hook.off;
+    __exports__.trigger = hook.trigger;
+    __exports__._promiseCallbacks = hook._promiseCallbacks;
 
     // TODO - don't make __instrument__ public. (For now, need it for testing.)
     // TODO - probably don't need to export error. But will need to fix error_hanlding_test.js
@@ -1321,7 +1323,6 @@ define("eidb",
     __exports__.getIndexes = getIndexes;
     __exports__.find = find;
     __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
-    __exports__.hook = hook;
   });
 window.EIDB = requireModule("eidb");
 })(window);

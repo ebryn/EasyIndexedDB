@@ -80,7 +80,7 @@ For asynchronous commands, if you do not need to handle the results of a command
 * `webkitGetDatabaseNames()`: Only works in Chrome.
 * `isGetDatabaseNamesSupported`: A property that returns true for Chrome.
 * `getDatabaseNames()`: Will use `webkitGetDatabaseNames` if in Chrome. For other browsers, it will return a promise that results in an empty array.
-* `hook()`: Provides a way to run code before or after certain EIDB events.
+* `on()`, `off()`, `trigger()`: RSVP.EventTarget mixin functionality
 
 ## Basic Queries
 

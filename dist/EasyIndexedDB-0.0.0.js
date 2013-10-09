@@ -141,80 +141,6 @@ define("eidb/database",
 
     __exports__.Database = Database;
   });
-define("eidb/database_tracking",
-  ["eidb/promise","eidb/error_handling","eidb/hook","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
-    "use strict";
-    var RSVP = __dependency1__.RSVP;
-    var _handleErrors = __dependency2__._handleErrors;
-    var hook = __dependency3__.hook;
-
-    var DATABASE_TRACKING = false,
-        DB_NAME = '__eidb__',
-        STORE_NAME = 'databases',
-        opts = { stopErrors: true };
-
-    function __addNameToDb(target, eidb) {
-      return function() {
-        return eidb.open(DB_NAME).then(function(db) {
-
-          var store = _handleErrors('db tracking', arguments, function() {
-            return db.objectStore(STORE_NAME, opts);
-          }, opts);
-
-          return store.put({ name: target.name });
-        });
-      };
-    }
-
-    function __createStore(eidb) {
-      return function() {
-        return eidb.createObjectStore(DB_NAME, STORE_NAME, {keyPath: 'name'});
-      };
-    }
-
-    function __trackDb(target) {
-      var EIDB = window.EIDB;
-
-      if (target.name === DB_NAME || !EIDB.DATABASE_TRACKING) { return; }
-
-      __addNameToDb(target, EIDB)()
-        .then(null, __createStore(EIDB))
-        .then(__addNameToDb(target, EIDB))
-        .then(null, function(){}) // if tracking db is deleted unexpectedly
-        .then(function() { EIDB.trigger('dbWasTracked', target.name); });
-    }
-
-    function __removeDB(evtResult, method, args) {
-      var EIDB = window.EIDB,
-          oldErrorHandling = EIDB.ERROR_HANDLING,
-          dbName = args && args[0];
-
-      if (dbName === DB_NAME || method !== 'deleteDatabase' || !EIDB.DATABASE_TRACKING) { return; }
-
-      EIDB.open(DB_NAME).then(function(db) {
-
-        EIDB.ERROR_HANDLING = false;
-        var store = db.objectStore(STORE_NAME);
-
-        EIDB.ERROR_HANDLING = oldErrorHandling;
-        return store.delete(dbName);
-
-      }).then(function() {
-        EIDB.trigger('dbWasUntracked');
-
-      }).then(null, function(e) {
-        EIDB.ERROR_HANDLING = oldErrorHandling;
-        EIDB.trigger('trackingDbDeletedError', dbName);
-      });
-    }
-
-    hook.addHook('open.onsuccess.before', __trackDb);
-    hook.addHook('_request.onsuccess.before', __removeDB);
-
-
-    __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
-  });
 define("eidb/eidb",
   ["eidb/indexed_db","eidb/promise","eidb/database","eidb/utils","eidb/error_handling","eidb/hook","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
@@ -864,7 +790,7 @@ define("eidb/hook",
     RSVP.EventTarget.mixin(hook);
 
     hook.addHook = function(eventName, fn) {
-      this.on(eventName, function(evt) {
+      hook.on(eventName, function(evt) {
         fn.apply(fn, evt.args);
       });
     };
@@ -1253,8 +1179,8 @@ define("eidb/utils",
     __exports__._hasKeyPath = _hasKeyPath;
   });
 define("eidb",
-  ["eidb/eidb","eidb/find","eidb/database","eidb/object_store","eidb/transaction","eidb/index","eidb/utils","eidb/error_handling","eidb/promise","eidb/database_tracking","eidb/hook","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __exports__) {
+  ["eidb/eidb","eidb/find","eidb/database","eidb/object_store","eidb/transaction","eidb/index","eidb/utils","eidb/error_handling","eidb/hook","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __exports__) {
     "use strict";
     var open = __dependency1__.open;
     var _delete = __dependency1__._delete;
@@ -1283,15 +1209,14 @@ define("eidb",
     var ERROR_HANDLING = __dependency8__.ERROR_HANDLING;
     var ERROR_LOGGING = __dependency8__.ERROR_LOGGING;
     var error = __dependency8__.error;
-    var RSVP = __dependency9__.RSVP;
-    var DATABASE_TRACKING = __dependency10__.DATABASE_TRACKING;
-    var hook = __dependency11__.hook;
+    var hook = __dependency9__.hook;
 
     __exports__.delete = _delete;
     __exports__.on = hook.on;
     __exports__.off = hook.off;
     __exports__.trigger = hook.trigger;
     __exports__._promiseCallbacks = hook._promiseCallbacks;
+    __exports__.addHook = hook.addHook;
 
     // TODO - don't make __instrument__ public. (For now, need it for testing.)
     // TODO - probably don't need to export error. But will need to fix error_hanlding_test.js
@@ -1322,7 +1247,6 @@ define("eidb",
     __exports__.error = error;
     __exports__.getIndexes = getIndexes;
     __exports__.find = find;
-    __exports__.DATABASE_TRACKING = DATABASE_TRACKING;
   });
 window.EIDB = requireModule("eidb");
 })(window);

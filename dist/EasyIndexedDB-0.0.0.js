@@ -36,19 +36,24 @@ var define, requireModule;
 })();
 
 define("eidb/database",
-  ["eidb/indexed_db","eidb/object_store","eidb/transaction","eidb/error_handling","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["eidb/indexed_db","eidb/object_store","eidb/transaction","eidb/error_handling","eidb/hook","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var idbDatabase = __dependency1__.idbDatabase;
     var ObjectStore = __dependency2__.ObjectStore;
     var Transaction = __dependency3__.Transaction;
     var _handleErrors = __dependency4__._handleErrors;
+    var hook = __dependency5__.hook;
 
     var Database = function(idbDatabase) {
       this._idbDatabase = idbDatabase;
       this.name = idbDatabase.name;
       this.version = idbDatabase.version;
       this.objectStoreNames = idbDatabase.objectStoreNames;
+
+      idbDatabase.onabort = hook.triggerHandler('database.onabort');
+      idbDatabase.onerror = hook.triggerHandler('database.onerror');
+      idbDatabase.onversionchange =  hook.triggerHandler('database.onversionchange');
     };
 
     Database.prototype = {
@@ -163,7 +168,7 @@ define("eidb/eidb",
         req.onsuccess = function(event) {
           var db = new Database(req.result);
 
-          hook('open.onsuccess', resolve, db);
+          hook('open.onsuccess.resolve', resolve, db);
 
           if (!opts || (opts && !opts.keepOpen)) {
             setTimeout(function() {
@@ -178,7 +183,7 @@ define("eidb/eidb",
           var db = new Database(req.result),
               ret = (opts && opts.returnEvent) ? {db: db, event: event} : db;
           if (upgradeCallback) {
-            hook('open.onupgradeneeded', upgradeCallback, ret);
+            hook('open.onupgradeneeded.callback', upgradeCallback, ret);
           }
         };
       }).then(null, _rsvpErrorHandler(indexedDB, "open", [dbName, version, upgradeCallback, opts]));
@@ -446,10 +451,10 @@ define("eidb/error_handling",
     }
 
     [
-      'open.onsuccess.before',
-      'open.onupgradeneeded.before',
-      '_request.onsuccess.before',
-      '_openCursor.onsuccess.before'
+      'open.onsuccess.resolve.before',
+      'open.onupgradeneeded.callback.before',
+      '_request.onsuccess.resolve.before',
+      '_openCursor.onsuccess.resolve.before'
     ].forEach(function(type) {
       hook.addHook(type, _clearError);
     });
@@ -772,10 +777,6 @@ define("eidb/hook",
     var __args,
         __slice = Array.prototype.slice;
 
-    function __trigger(eventName) {
-      hook.trigger(eventName, { args: __args });
-    }
-
     function hook(eventName, fn) {
       var ret;
       __args = __slice.call(arguments, 2);
@@ -789,10 +790,20 @@ define("eidb/hook",
 
     RSVP.EventTarget.mixin(hook);
 
+    function __trigger(eventName) {
+      hook.trigger(eventName, { args: __args });
+    }
+
     hook.addHook = function(eventName, fn) {
       hook.on(eventName, function(evt) {
         fn.apply(fn, evt.args);
       });
+    };
+
+    hook.triggerHandler = function(eventName) {
+      return function(evt) {
+        hook.trigger(eventName, evt);
+      };
     };
 
 
@@ -1035,15 +1046,19 @@ define("eidb/promise",
     __exports__.RSVP = RSVP;
   });
 define("eidb/transaction",
-  ["eidb/object_store","eidb/error_handling","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["eidb/object_store","eidb/error_handling","eidb/hook","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var ObjectStore = __dependency1__.ObjectStore;
     var _handleErrors = __dependency2__._handleErrors;
+    var hook = __dependency3__.hook;
 
-    // transactions have onerror, onabort, and oncomplete events
     var Transaction = function(idbTransaction) {
       this._idbTransaction = idbTransaction;
+
+      idbTransaction.onabort = hook.triggerHandler('transaction.onabort');
+      idbTransaction.oncomplete = hook.triggerHandler('transaction.oncomplete');
+      idbTransaction.onerror = hook.triggerHandler('transaction.onerror');
     };
 
     Transaction.prototype = {
@@ -1090,7 +1105,7 @@ define("eidb/utils",
         var req = idbObj[method].apply(idbObj, _args);
 
         req.onsuccess = function(evt) {
-          hook('_request.onsuccess', resolve, evt.target.result, method, args);
+          hook('_request.onsuccess.resolve', resolve, evt.target.result, method, args);
         };
         req.onerror = function(evt) {
           reject(evt);
@@ -1109,7 +1124,7 @@ define("eidb/utils",
         var req = idbObj[method](range, direction);
 
         req.onsuccess = function(event) {
-          hook('_openCursor.onsuccess', onsuccess, event.target.result, resolve);
+          hook('_openCursor.onsuccess.resolve', onsuccess, event.target.result, resolve);
         };
         req.onerror = function(event) {
           reject(event);

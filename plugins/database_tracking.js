@@ -1,35 +1,32 @@
 // globals: RSVP, EIDB
 
 var addHook = EIDB.addHook,
-    DB_NAME = EIDB.TRACKING_DB_NAME = '__eidb__',
-    STORE_NAME = EIDB.TRACKING_STORE_NAME = 'databases',
-    opts = { stopErrors: true };
+    DB_NAME = '__eidb__',
+    STORE_NAME = 'databases';
 
-EIDB.DATABASE_TRACKING = false;
-
-function addNameToDb(target, eidb) {
+function addNameToDb(target) {
   return function() {
-    return eidb.open(DB_NAME).then(function(db) {
-      var store = db.objectStore(STORE_NAME, opts);
+    return EIDB.open(DB_NAME).then(function(db) {
+      var store = db.objectStore(STORE_NAME);
       return store.put({ name: target.name });
     });
   };
 }
 
-function createStore(eidb) {
+function createStore() {
   return function() {
-    return eidb.createObjectStore(DB_NAME, STORE_NAME, {keyPath: 'name'});
+    return EIDB.createObjectStore(DB_NAME, STORE_NAME, {keyPath: 'name'});
   };
 }
 
 function trackDb(target) {
   var EIDB = window.EIDB;
 
-  if (target.name === DB_NAME || !EIDB.DATABASE_TRACKING) { return; }
+  if (target.name === DB_NAME) { return; }
 
-  addNameToDb(target, EIDB)()
-    .then(null, createStore(EIDB))
-    .then(__addNameToDb(target, EIDB))
+  addNameToDb(target)()
+    .then(null, createStore())
+    .then(addNameToDb(target))
     .then(null, function(){}) // if tracking db is deleted unexpectedly
     .then(function() { EIDB.trigger('dbWasTracked', target.name); });
 }
@@ -38,7 +35,7 @@ function removeDB(evtResult, method, args) {
   var EIDB = window.EIDB,
       dbName = args && args[0];
 
-  if (dbName === DB_NAME || method !== 'deleteDatabase' || !EIDB.DATABASE_TRACKING) { return; }
+  if (dbName === DB_NAME || method !== 'deleteDatabase') { return; }
 
   EIDB.open(DB_NAME).then(function(db) {
     var store = db.objectStore(STORE_NAME);
@@ -52,5 +49,5 @@ function removeDB(evtResult, method, args) {
   });
 }
 
-addHook('open.onsuccess.before', trackDb);
-addHook('_request.onsuccess.before', removeDB);
+addHook('open.onsuccess.resolve.before', trackDb);
+addHook('_request.onsuccess.resolve.before', removeDB);

@@ -2,8 +2,6 @@ module("Error Handing", {
   setup: function() {
     EIDB.delete('foo');
     EIDB.delete('foo2');
-    EIDB.ERROR_CATCHING = true;
-    EIDB.ERROR_HANDLING = true;
     EIDB.ERROR_LOGGING = false;
     EIDB.on('error', errorHandler);
   },
@@ -11,8 +9,6 @@ module("Error Handing", {
   teardown: function() {
     EIDB.delete('foo');
     EIDB.delete('foo2');
-    EIDB.ERROR_CATCHING = false;
-    EIDB.ERROR_HANDLING = false;
     EIDB.ERROR_LOGGING = true;
     errorHandler.error = null;
     EIDB.off('error', errorHandler);

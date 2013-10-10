@@ -1,12 +1,10 @@
 module("database tracking", {
   setup: function() {
-    EIDB.DATABASE_TRACKING = true
     window.tdbName = '__eidb__';
     window.tstoreName = 'databases';
   },
 
   teardown: function() {
-    EIDB.DATABASE_TRACKING = false;
     EIDB.delete(tdbName);
     delete window.tdbName;
     delete window.tstoreName;
@@ -16,14 +14,13 @@ module("database tracking", {
 asyncTest('Adding - No initial tracking database', function() {
   expect(2);
 
-  EIDB.on('dbWasTracked', function zzz() {
+  EIDB.on('dbWasTracked', function zzz(evt) {
     EIDB.off('dbWasTracked', zzz);
 
     EIDB.open(tdbName).then(function(db) {
       ok(db.hasObjectStore(tstoreName), 'EIDB will internally track created databases and store');
-      var store = db.objectStore(tstoreName);
 
-      return store.get('foo');
+      return db.objectStore(tstoreName).get('foo');
     }).then(function(res) {
 
       equal(res.name, 'foo', "The db's name is tracked");
@@ -124,21 +121,4 @@ asyncTest('Removing tracking db', function() {
       return EIDB.delete('baz');
     });
   }, 20);
-});
-
-asyncTest('when turned off', function() {
-  expect(1);
-
-  EIDB.DATABASE_TRACKING = false;
-
-  EIDB.open('foo').then(function() {
-    setTimeout(function() {
-      EIDB.open(tdbName).then(function(db) {
-        ok(!db.hasObjectStore(tstoreName), "The db was not tracked");
-
-        start();
-        EIDB.delete('foo');
-      });
-    }, 50);
-  });
 });

@@ -1,29 +1,25 @@
-import { RSVP } from './promise';
-import { hook } from './hook';
+// EIDB global
 
-var ERROR_HANDLING = false;
-var ERROR_LOGGING = true;
-var error = null;
+EIDB.ERROR_CATCHING = true;
+
+var on = EIDB.on,
+    trigger = EIDB.trigger,
+    addHook = EIDB.addHook;
 
 function handleError(e, args) {
-  var EIDB = window.EIDB,
-      logErrors = EIDB.ERROR_LOGGING;
-
   e.context = args.context;
   e.arguments = args.args;
   e.eidb_code = args.code;
-  e._message = __createErrorMessage(e);
+  e._message = createErrorMessage(e);
 
   EIDB.error = e;
-  EIDB.trigger('error', e);
+  trigger('error', e);
 
-  if (!EIDB.ERROR_HANDLING) { throw e; }
-  if (logErrors) { console.error(e); }
+  if (EIDB.ERROR_LOGGING) { console.error(e); }
 }
 
-function __createErrorMessage(e) {
-  var EIDB = window.EIDB,
-      message = null;
+function createErrorMessage(e) {
+  var message;
 
   if (e.message) { message = e.message; }
 
@@ -35,26 +31,22 @@ function __createErrorMessage(e) {
 }
 
 function rsvpErrorHandler(e, idbObj, method, args) {
-  var EIDB = window.EIDB,
-      logErrors = EIDB.ERROR_LOGGING;
-
   var error = new Error();
+
   error._name = "EIDB request " + idbObj + " #" + method + " error";
   error._idbObj = idbObj;
   error._arguments = args;
-  error._message = __createErrorMessage(e);
+  error._message = createErrorMessage(e);
   error.originalError = e;
 
-  if (!EIDB.ERROR_HANDLING) { throw e; }
-  if (logErrors) { console.error(e); }
-
   EIDB.error = e;
-  EIDB.trigger('error', e);
+  trigger('error', e);
 
+  if (EIDB.ERROR_LOGGING) { console.error(e); }
 }
 
-function _clearError() {
-  window.EIDB.error = null;
+function clearError() {
+  EIDB.error = null;
 }
 
 [
@@ -63,7 +55,7 @@ function _clearError() {
   '_request.onsuccess.resolve.before',
   '_openCursor.onsuccess.resolve.before'
 ].forEach(function(type) {
-  hook.addHook(type, _clearError);
+  addHook(type, clearError);
 });
 
 [
@@ -73,7 +65,7 @@ function _clearError() {
   '_request.promise',
   '_openCursor.promise'
 ].forEach(function(type) {
-  hook.on(type + ".error", function(evt) {
+  EIDB.on(type + ".error", function(evt) {
     var args = [evt.error].concat(evt.eidbInfo);
     rsvpErrorHandler.apply(rsvpErrorHandler, args);
   });
@@ -92,15 +84,11 @@ function _clearError() {
 ].forEach(function(type) {
 
   if (type !== 'database.close') {
-    hook.on(type + ".success", function(evt) {
-      _clearError();
-    });
+    on(type + ".success", clearError);
   }
 
-  hook.on(type + ".error", function(evt) {
+  EIDB.on(type + ".error", function(evt) {
     var args = [evt.error].concat(evt.eidbInfo);
     handleError.apply(handleError, args);
   });
 });
-
-export { ERROR_HANDLING, ERROR_LOGGING, error };

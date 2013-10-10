@@ -205,17 +205,12 @@ define("eidb/eidb",
     function bumpVersion(dbName, upgradeCallback, opts) {
       var args = arguments;
       if (!dbName) { return RSVP.resolve(null); }
-
       return open(dbName).then(function(db) {
         return open(dbName, db.version + 1, function(res) {
-          if (upgradeCallback && window.EIDB.ERROR_HANDLING) {
-            try {
+          if (upgradeCallback) {
+            hook.try('bumpVersion', db, args, function(self) {
               upgradeCallback(res);
-            } catch (e) {
-              hook.rsvpErrorHandler('bumpVersion.error', db, "bumpVersion", args)(e);
-            }
-          } else if (upgradeCallback) {
-            upgradeCallback(res);
+            });
           }
         }, opts);
       });
@@ -705,11 +700,13 @@ define("eidb/hook",
 
       try {
         ret = code(context);
-        hook.trigger(eventName + ".success");
+        hook.trigger(eventName + ".success", ret);
         return ret;
+
       } catch (e) {
         hook.trigger(eventName + ".error", { error: e, eidbInfo: _args });
         if (errorCatching) { return false; }
+        else { throw e; }
       }
     };
 
@@ -1132,11 +1129,11 @@ define("eidb",
     var ERROR_CATCHING = __dependency8__.ERROR_CATCHING;
 
     __exports__.delete = _delete;
-    __exports__.on = hook.on;
-    __exports__.off = hook.off;
-    __exports__.trigger = hook.trigger;
-    __exports__._promiseCallbacks = hook._promiseCallbacks;
     __exports__.addHook = hook.addHook;
+
+    ['on', 'off', 'trigger'].forEach(function(method) {
+      __exports__[method] = function() { hook[method].apply(hook, arguments); };
+    });
 
     // TODO - don't make __instrument__ public. (For now, need it for testing.)
     // TODO - probably don't need to export error. But will need to fix error_hanlding_test.js

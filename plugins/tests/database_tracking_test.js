@@ -2,6 +2,7 @@ module("database tracking", {
   setup: function() {
     window.tdbName = '__eidb__';
     window.tstoreName = 'databases';
+    EIDB.delete(tdbName);
   },
 
   teardown: function() {
@@ -14,8 +15,8 @@ module("database tracking", {
 asyncTest('Adding - No initial tracking database', function() {
   expect(2);
 
-  EIDB.on('dbWasTracked', function zzz(evt) {
-    EIDB.off('dbWasTracked', zzz);
+  EIDB.on('databaseTracking.tracked', function zzz(evt) {
+    EIDB.off('databaseTracking.tracked', zzz);
 
     EIDB.open(tdbName).then(function(db) {
       ok(db.hasObjectStore(tstoreName), 'EIDB will internally track created databases and store');
@@ -36,8 +37,8 @@ asyncTest('Adding - No initial tracking database', function() {
 asyncTest('Adding - Initial tracking database exists', function() {
   expect(2);
 
-  EIDB.on('dbWasTracked', function zzz() {
-    EIDB.off('dbWasTracked', zzz);
+  EIDB.on('databaseTracking.tracked', function zzz() {
+    EIDB.off('databaseTracking.tracked', zzz);
 
     EIDB.open(tdbName).then(function(db) {
       return EIDB.getRecord(tdbName, tstoreName, 'foo');
@@ -67,22 +68,22 @@ asyncTest('Adding - Initial tracking database exists', function() {
 asyncTest('Removing', function() {
   expect(2);
 
-  EIDB.on('trackingDbDeletedError', function zzz(ev) {
+  EIDB.on('databaseTracking.untracked.error', function zzz(ev) {
     if (ev.detail === 'baz') {
-      EIDB.off('trackingDbDeletedError', zzz);
+      EIDB.off('databaseTracking.untracked.error', zzz);
 
-      ok(true, 'Error is caught and trackingDbDeletedError event is triggered if tracking is db deleted and then another existing db is then deleted');
+      ok(true, 'Error is caught and databaseTracking.untracked.error event is triggered if tracking is db deleted and then another existing db is then deleted');
 
       start();
     }
   });
 
-  EIDB.on('dbWasTracked', function zzz(ev) {
+  EIDB.on('databaseTracking.tracked', function zzz(ev) {
     if (ev.detail === 'bar') {
-      EIDB.off('dbWasTracked');
+      EIDB.off('databaseTracking.tracked');
 
-      EIDB.on('dbWasUntracked', function zzz() {
-        EIDB.off('dbWasUntracked', zzz);
+      EIDB.on('databaseTracking.untracked', function zzz() {
+        EIDB.off('databaseTracking.untracked', zzz);
 
         EIDB.getRecord(tdbName, tstoreName, 'bar').then(function(record) {
 
@@ -106,10 +107,10 @@ asyncTest('Removing', function() {
 asyncTest('Removing tracking db', function() {
   expect(1);
 
-  EIDB.on('trackingDbDeletedError', function zzz() {
-    EIDB.off('trackingDbDeletedError', zzz);
+  EIDB.on('databaseTracking.untracked.error', function zzz() {
+    EIDB.off('databaseTracking.untracked.error', zzz);
 
-    ok(true, 'Error is caught and trackingDbDeletedError event should trigger if tracking is db deleted and then another existing db is then deleted');
+    ok(true, 'Error is caught and databaseTracking.untracked.error event should trigger if tracking is db deleted and then another existing db is then deleted');
 
     start();
   });

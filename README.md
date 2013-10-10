@@ -77,9 +77,9 @@ For asynchronous commands, if you do not need to handle the results of a command
 * `putRecord(dbName, storeName, value, key)`
 * `getRecord(dbName, storeName, key)`
 * `deleteRecord(dbName, storeName, key)`
-* `webkitGetDatabaseNames()`: Only works in Chrome.
-* `isGetDatabaseNamesSupported`: A property that returns true for Chrome.
-* `getDatabaseNames()`: Will use `webkitGetDatabaseNames` if in Chrome. For other browsers, it will return a promise that results in an empty array.
+* `webkitGetDatabaseNames()`: Only works in Chrome/Opera (Chromium-based browsers).
+* `isGetDatabaseNamesSupported`: A property that returns true for Chrome/Opera.
+* `getDatabaseNames()`: Will use `webkitGetDatabaseNames` if in Chrome/Opera. For other browsers, it will return a promise that results in an empty array.
 * `on()`, `off()`, `trigger()`: RSVP.EventTarget mixin functionality
 
 ## Basic Queries
@@ -145,23 +145,34 @@ Say your records look something like this `{id: 1, name: 'Stan', color: 'red'}`
 ### Indexing
 If you search for records through `EIDB.find`, EIDB will automatically created the appropriate indexes for you if they do not exist. So if you call `eq('color', 'blue')`, EIDB will create an index called 'color'. If you call `eq({name: 'Kyle', color: 'blue'})`, EIDB will create an index called 'color_name'.
 
-## Error Handing
+## Plugins
 
-EIDB can funnel error handling into one place by setting `EIDB.ERROR_HANDLING = true' (false by default.) If you want to process the error in your application, then you can register an error handler with EIDB.
+EIDB uses RSVP's EventTarget mixin functionality to allow for event listening. For example, if you wanted to know when a IndexedDB request was about to be resolved, you could register an event handler:
+
+```javascript
+EIDB.on('_request.onsuccess.resolve.before', function(evt) {
+  /* ... */
+});
+```
+This allows for plugin functionality where you can enhance EIDB with independent scripts.
+
+### Error Handing
+
+When getting started with IndexedDB and/or Promises, debugging errors can tricky. The `error_handling` plugin funnels errors from IndexedDB or Promises in one place so that you can just register one event handler for error processing. In addition, some extra information is added to the Error object to aid in debugging.
 
 ```javascript
 EIDB.on('error', function(err) {
-   /* have the app process the error */
+   /* ... */
 });
 ```
 
 If `EIDB.ERROR_LOGGING = true` (default), then you will see error information in the browser console as well.
 
-## Database Tracking
+### Database Tracking
 
-Currently, only Chrome natively supports retrieving the names of the databases that aleady exists. If your web app allows end users to create their own databases, then you'll need to manually keep track of those databases in browsers such as Firefox.
+Currently, only Chrome and Opera natively supports retrieving the names of the databases that aleady exists. If your web app allows end users to create their own databases, then you'll need to manually keep track of those databases in browsers such as Firefox.
 
-IF `EIDB.DATABASE_TRACKING` is set to true, EIDB will keep track of the names of databases created through EIDB in a database called "__eidb__". (Databases created directly though the IndexedDB API will not be tracked.)
+This plugin will keep track of the names of databases created through EIDB in a database called "__eidb__" and an object store called "databases". (Databases created directly though the IndexedDB API will not be tracked.)
 
 ## Working Closer to the IndexedDB API
 EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line object stores are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:

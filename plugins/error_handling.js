@@ -1,48 +1,59 @@
 // EIDB global
 
+(function(EIDB) {
+
 EIDB.ERROR_CATCHING = true;
+EIDB.ERROR_LOGGING = true;
+EIDB.ERROR_HANDLING = true;
 
 var on = EIDB.on,
     trigger = EIDB.trigger,
-    addHook = EIDB.addHook;
+    addHook = EIDB.addHook,
+    slice = Array.prototype.slice;
 
-function handleError(e, args) {
-  e.context = args.context;
-  e.arguments = args.args;
-  e.eidb_code = args.code;
-  e._message = createErrorMessage(e);
+function handleError(evt) {
+  if (EIDB.ERROR_HANDLING) {
+    var e = evt.error,
+        eidbInfo = evt.eidbInfo;
 
-  EIDB.error = e;
-  trigger('error', e);
+    e.eidbEvent = evt.type;
+    e.eidbContext = eidbInfo[0];
+    e.eidbMethodArguments = eidbInfo[1];
+    e.eidbCode = eidbInfo[2];
 
-  if (EIDB.ERROR_LOGGING) { console.error(e); }
+    EIDB.error = e;
+    trigger('error', e);
+    if (EIDB.ERROR_LOGGING) { console.error(e, e.stack); }
+  };
 }
 
 function createErrorMessage(e) {
   var message;
 
   if (e.message) { message = e.message; }
-
   if (e.target && e.target.error && e.target.error.message) {
     message = e.target.error.message;
   }
-
   return message;
 }
 
-function rsvpErrorHandler(e, idbObj, method, args) {
-  var error = new Error();
+function rsvpErrorHandler(evt) {
+  if (EIDB.ERROR_HANDLING) {
+    var e = new Error(),
+        eidbInfo = evt.eidbInfo;
 
-  error._name = "EIDB request " + idbObj + " #" + method + " error";
-  error._idbObj = idbObj;
-  error._arguments = args;
-  error._message = createErrorMessage(e);
-  error.originalError = e;
+    e.eidbEvent = evt.type;
+    e.eidbContext = eidbInfo[0];
+    e.eidbMethod = eidbInfo[1];
+    e.eidbMethodArguments = eidbInfo[2];
+    e._message = createErrorMessage(e);
+    e.originalError = evt.error;
+    e.stack = evt.error.stack;
 
-  EIDB.error = e;
-  trigger('error', e);
-
-  if (EIDB.ERROR_LOGGING) { console.error(e); }
+    EIDB.error = e;
+    trigger('error', e);
+    if (EIDB.ERROR_LOGGING) { console.error(e, e.stack); }
+  }
 }
 
 function clearError() {
@@ -65,10 +76,7 @@ function clearError() {
   '_request.promise',
   '_openCursor.promise'
 ].forEach(function(type) {
-  EIDB.on(type + ".error", function(evt) {
-    var args = [evt.error].concat(evt.eidbInfo);
-    rsvpErrorHandler.apply(rsvpErrorHandler, args);
-  });
+  EIDB.on(type + ".error", rsvpErrorHandler);
 });
 
 [
@@ -83,12 +91,11 @@ function clearError() {
   'transaction.abort'
 ].forEach(function(type) {
 
+  on(type + ".error", handleError);
+
   if (type !== 'database.close') {
     on(type + ".success", clearError);
   }
-
-  EIDB.on(type + ".error", function(evt) {
-    var args = [evt.error].concat(evt.eidbInfo);
-    handleError.apply(handleError, args);
-  });
 });
+
+})(EIDB);

@@ -2,15 +2,20 @@ module("Error Handing", {
   setup: function() {
     EIDB.delete('foo');
     EIDB.delete('foo2');
+    EIDB.ERROR_CATCHING = true;
     EIDB.ERROR_HANDLING = true;
     EIDB.ERROR_LOGGING = false;
+    EIDB.on('error', errorHandler);
   },
 
   teardown: function() {
     EIDB.delete('foo');
     EIDB.delete('foo2');
+    EIDB.ERROR_CATCHING = false;
     EIDB.ERROR_HANDLING = false;
     EIDB.ERROR_LOGGING = true;
+    errorHandler.error = null;
+    EIDB.off('error', errorHandler);
   }
 });
 
@@ -43,8 +48,7 @@ asyncTest('ObjectStore', function() {
     var store = db.objectStore('bar');
     db.close();
 
-    store.insertWith_key('add', {name: 'baz'}, null, db).then(function() {
-
+    store.insertWith_key('add', {name: 'baz'}, null, db).then(function(res) {
       ok(EIDB.error instanceof DOMException, "insertWith_key error is caught");
       start();
     });
@@ -105,7 +109,6 @@ asyncTest('Database', function() {
     db.transaction('nope');
     ok(EIDB.error instanceof DOMException, "transaction error is caught");
 
-
     start();
   });
 });
@@ -133,7 +136,7 @@ asyncTest('EIDB.open', function() {
   EIDB.open('foo', 1).then(function() {
     return EIDB.open('foo', -1);
   }).then(function() {
-    ok(EIDB.error instanceof Object, "open error is caught");
+    ok(errorHandler.error instanceof Object, "open error is caught");
 
     return EIDB.open('foo', 2);
   }).then(function() {
@@ -156,7 +159,7 @@ asyncTest('EIDB.openOnly', function() {
     return EIDB.openOnly('foo', -1);
   }).then(function() {
 
-    ok(EIDB.error, "openOnly error is caught");
+    ok(errorHandler.error, "openOnly error is caught");
 
     start();
   });
@@ -165,8 +168,6 @@ asyncTest('EIDB.openOnly', function() {
 asyncTest('EIDB.bumpVersion', function() {
   expect(1);
 
-  EIDB.on('error', errorHandler);
-
   EIDB.bumpVersion('foo', function() {
     throw new TypeError;
   }).then(function() {
@@ -174,7 +175,6 @@ asyncTest('EIDB.bumpVersion', function() {
     ok(errorHandler.error, "bumpVersion error is caught");
 
     start();
-    EIDB.off('error', errorHandler);
   });
 });
 
@@ -183,7 +183,7 @@ asyncTest('EIDB.storeAction', function() {
 
   EIDB.storeAction('foo', 'nope').then(function() {
 
-    ok(EIDB.error, 'storeAction error is caught');
+    ok(errorHandler.error, 'storeAction error is caught');
 
     start();
   });

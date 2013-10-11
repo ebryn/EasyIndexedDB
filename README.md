@@ -110,8 +110,8 @@ Say your records look something like this `{id: 1, name: 'Stan', color: 'red'}`
     ```javascript
     EIDB.find('myDB', 'kids')
         .match('name', /tan/)
-        .first();
-        .then(function(results) { /* ... */ });
+        .first()
+        .then(function(record) { /* ... */ });
     ```
 
     Methods you can use in a query chain:
@@ -144,6 +144,20 @@ Say your records look something like this `{id: 1, name: 'Stan', color: 'red'}`
 
 ### Indexing
 If you search for records through `EIDB.find`, EIDB will automatically created the appropriate indexes for you if they do not exist. So if you call `eq('color', 'blue')`, EIDB will create an index called 'color'. If you call `eq({name: 'Kyle', color: 'blue'})`, EIDB will create an index called 'color_name'.
+
+## Logging
+You can enable logging of certain EIDB events/requests via `EIDB.LOGGING`.
+
+```javascript
+EIDB.LOGGING = {
+  // events: true
+  // requests: true
+  // cursors: true
+  // opens: true
+  // all: true  /* log all of the above types */
+}
+
+```
 
 ## Plugins
 

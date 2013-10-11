@@ -42,21 +42,22 @@ function createStore() {
   };
 }
 
-function trackDb(target) {
+function trackDb(db) {
   var EIDB = window.EIDB;
 
-  if (target.name === DB_NAME) { return; }
+  if (db.name === DB_NAME) { return; }
 
-  addNameToDb(target)()
+  addNameToDb(db)()
     .then(null, createStore())
-    .then(addNameToDb(target))
+    .then(addNameToDb(db))
     .then(null, function(){}) // if tracking db is deleted unexpectedly
-    .then(function() { EIDB.trigger('databaseTracking.tracked', target.name); });
+    .then(function() { EIDB.trigger('databaseTracking.tracked', db.name); });
 }
 
-function removeDB(evtResult, method, args) {
+function removeDB(evtResult, args) {
   var EIDB = window.EIDB,
-      dbName = args && args[0];
+      method = args[1],
+      dbName = args[2] && args[2][0];
 
   if (dbName === DB_NAME || method !== 'deleteDatabase') { return; }
 

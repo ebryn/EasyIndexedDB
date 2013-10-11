@@ -76,7 +76,7 @@ function clearError() {
   '_request.promise',
   '_openCursor.promise'
 ].forEach(function(type) {
-  EIDB.on(type + ".error", rsvpErrorHandler);
+  on(type + ".error", rsvpErrorHandler);
 });
 
 [

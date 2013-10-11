@@ -10,3 +10,11 @@ RSVP.configure('onerror', function(error) {
 function errorHandler(e) {
   return errorHandler.error = e;
 }
+
+EIDB.LOGGING = {
+  // all: true
+  // events: true
+  // requests: true
+  // cursors: true
+  // opens: true
+}

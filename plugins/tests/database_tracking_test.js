@@ -1,7 +1,7 @@
 module("database tracking", {
   setup: function() {
     window.tdbName = '__eidb__';
-    window.tstoreName = 'databases';
+    window.tstoreName = '__eidb__databases__';
     EIDB.delete(tdbName);
   },
 

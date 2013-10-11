@@ -186,7 +186,7 @@ If `EIDB.ERROR_LOGGING = true` (default), then you will see error information in
 
 Currently, only Chrome and Opera natively supports retrieving the names of the databases that aleady exists. If your web app allows end users to create their own databases, then you'll need to manually keep track of those databases in browsers such as Firefox.
 
-This plugin will keep track of the names of databases created through EIDB in a database called "__eidb__" and an object store called "databases". (Databases created directly though the IndexedDB API will not be tracked.)
+This plugin will keep track of the names of databases created through EIDB in a database called "__eidb__" and an object store called "__eidb__databases__". (Databases created directly though the IndexedDB API will not be tracked.)
 
 ## Working Closer to the IndexedDB API
 EIDB will automatically take care of some of the details of using IndexedDB (database versioning, placing a "_key" value in records when out-of-line object stores are used, creating indexes as needed, etc.). If this does not suite your needs, you can work at a more granular level. Here is an example:

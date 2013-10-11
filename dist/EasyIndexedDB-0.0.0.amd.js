@@ -721,10 +721,8 @@ define("eidb/hook",
             obj = setup(args);
 
         if (!obj) { return; }
-
         __addRecord(dbName, storeName, obj)()
-          .then(null, __createStore(dbName, storeName, storeOpts))
-          .then(__addRecord(dbName, storeName, obj))
+          .then(null, __createStore(dbName, storeName, storeOpts, obj))
           .then(onsuccess(args))
           .then(null, onerror); // if db is deleted unexpectedly
         };
@@ -769,15 +767,18 @@ define("eidb/hook",
           var store = __suppressErrorHandling(function() {
             return db.objectStore(storeName);
           });
+
           return store.put(obj);
         });
       };
     }
 
-    function __createStore(dbName, storeName, opts) {
+    function __createStore(dbName, storeName, opts, obj) {
       return function() {
-        return window.EIDB.createObjectStore(dbName, storeName, opts);
+        return window.EIDB.createObjectStore(dbName, storeName, opts)
+          .then(__addRecord(dbName, storeName, obj));
       };
+
     }
 
     function __deleteRecord(dbName, storeName, key) {

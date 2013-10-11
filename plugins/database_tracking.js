@@ -1,12 +1,12 @@
-// globals: RSVP, EIDB
+// globals: EIDB
 
-(function(RSVP, EIDB) {
+(function(EIDB) {
 
 var addHook = EIDB.hook.addHook,
     addFactory = EIDB.hook.addFactory,
     deleteFactory = EIDB.hook.deleteFactory,
     DB_NAME = '__eidb__',
-    STORE_NAME = 'databases';
+    STORE_NAME = '__eidb__databases__';
 
 var addOpts = {
       dbName: DB_NAME,
@@ -61,4 +61,4 @@ function removeError(key) {
 addHook('open.onsuccess.resolve.before', addDb);
 addHook('_request.onsuccess.resolve.before', removeDB);
 
-})(RSVP, EIDB);
+})(EIDB);

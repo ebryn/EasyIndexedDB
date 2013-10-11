@@ -683,7 +683,10 @@ define("eidb/hook",
       var args = __slice.call(arguments, 1);
 
       return function(e) {
+        var errorCatching = window.EIDB.ERROR_CATCHING;
+
         hook.trigger(eventName, { error: e, eidbInfo: args });
+        if (!errorCatching) { throw e; }
       };
     };
 

@@ -69,7 +69,7 @@ asyncTest("CRUD records", function() {
 });
 
 asyncTest('indexes', function() {
-  expect(8);
+  expect(7);
 
   EIDB.open('foo', 1, function(db) {
     var _index, index, indexNames,
@@ -89,13 +89,7 @@ asyncTest('indexes', function() {
     store.deleteIndex('by_name');
     ok(!store.indexNames.contains('by_name'), '#deleteIndex removes the index');
 
-    try { store.index('nope'); }
-    catch (e) {
-
-      ok(true, '#index throws error for non-existent index');
-    }
-
-    store.createIndex('by_name', 'name', {unique: true});
+    return store.createIndex('by_name', 'name', {unique: true});
   }).then(function(db) {
 
     EIDB.open('foo', 2).then(function(db) {

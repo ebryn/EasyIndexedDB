@@ -15,7 +15,6 @@ asyncTest('rsvpErrorHandler', function() {
   });
 
   EIDB.open('foo', -1).then(null, function(e) {
-
     ok(e instanceof Error, "RSVP error is passed on");
     start();
   });
@@ -29,8 +28,7 @@ asyncTest('try', function() {
 
     try { store.index('nope'); }
     catch (e) {
-
-      ok(e instanceof Error, "IndexedDB error is passed on");
+      ok(e instanceof DOMException, "IndexedDB error is passed on");
       start();
     }
   });

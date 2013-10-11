@@ -707,6 +707,89 @@ define("eidb/hook",
       }
     };
 
+    /******************************************/
+    // the following is to support plugins that use dbs/stores
+    hook.addFactory = function addFactory(opts, setup, onsuccess, onerror) {
+      var dbName = opts.dbName,
+          storeName = opts.storeName,
+          storeOpts = opts.storeOpts;
+
+      onerror = onerror || function(){};
+
+      return function() {
+        var args = arguments,
+            obj = setup(args);
+
+        if (!obj) { return; }
+
+        __addRecord(dbName, storeName, obj)()
+          .then(null, __createStore(dbName, storeName, storeOpts))
+          .then(__addRecord(dbName, storeName, obj))
+          .then(onsuccess(args))
+          .then(null, onerror); // if db is deleted unexpectedly
+        };
+    };
+
+    hook.deleteFactory = function deleteFactory(opts, setup, onsuccess, onerror) {
+      var dbName = opts.dbName,
+          storeName = opts.storeName;
+
+      return function() {
+        var args = Array.prototype.slice.call(arguments)[1],
+            key = setup(args);
+
+        if (!key) { return; }
+
+        __deleteRecord(dbName, storeName, key)
+            .then(onsuccess(args))
+            .then(null, onerror(key));
+        };
+    };
+
+    function __suppressErrorHandling(code) { //if using error_handling plugin
+      var ret,
+          oldErrorHandling = window.EIDB.ERROR_HANDLING;
+
+      window.EIDB.ERROR_HANDLING = false;
+      try {
+        ret = code();
+        window.EIDB.ERROR_HANDLING = oldErrorHandling;
+        return ret;
+      }
+      catch (e) {
+        window.EIDB.ERROR_HANDLING = oldErrorHandling;
+        throw 'error getting plugin object store';
+      }
+    }
+
+    function __addRecord(dbName, storeName, obj) {
+      return function() {
+        return window.EIDB.open(dbName).then(function(db) {
+
+          var store = __suppressErrorHandling(function() {
+            return db.objectStore(storeName);
+          });
+          return store.put(obj);
+        });
+      };
+    }
+
+    function __createStore(dbName, storeName, opts) {
+      return function() {
+        return window.EIDB.createObjectStore(dbName, storeName, opts);
+      };
+    }
+
+    function __deleteRecord(dbName, storeName, key) {
+      return window.EIDB.open(dbName).then(function(db) {
+        var store = __suppressErrorHandling(function() {
+          return db.objectStore(storeName);
+        });
+
+        return store.delete(key);
+      });
+    }
+
 
     __exports__.hook = hook;
     __exports__.ERROR_CATCHING = ERROR_CATCHING;
@@ -1213,7 +1296,6 @@ define("eidb",
     var LOGGING = __dependency9__.LOGGING;
 
     __exports__.delete = _delete;
-    __exports__.addHook = hook.addHook;
 
     ['on', 'off', 'trigger'].forEach(function(method) {
       __exports__[method] = function() { hook[method].apply(hook, arguments); };
@@ -1245,6 +1327,7 @@ define("eidb",
     __exports__.__instrument__ = __instrument__;
     __exports__.getIndexes = getIndexes;
     __exports__.find = find;
+    __exports__.hook = hook;
     __exports__.ERROR_CATCHING = ERROR_CATCHING;
     __exports__.LOGGING = LOGGING;
   });

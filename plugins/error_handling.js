@@ -8,7 +8,7 @@ EIDB.ERROR_HANDLING = true;
 
 var on = EIDB.on,
     trigger = EIDB.trigger,
-    addHook = EIDB.addHook,
+    addHook = EIDB.hook.addHook,
     slice = Array.prototype.slice;
 
 function handleError(evt) {

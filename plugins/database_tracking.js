@@ -2,80 +2,63 @@
 
 (function(RSVP, EIDB) {
 
-var addHook = EIDB.addHook,
+var addHook = EIDB.hook.addHook,
+    addFactory = EIDB.hook.addFactory,
+    deleteFactory = EIDB.hook.deleteFactory,
     DB_NAME = '__eidb__',
     STORE_NAME = 'databases';
 
-function suppressErrorHandling(code) {
-  var ret,
-      oldErrorHandling = EIDB.ERROR_HANDLING;
+var addOpts = {
+      dbName: DB_NAME,
+      storeName: STORE_NAME,
+      storeOpts: { keyPath: 'name' }
+    },
+    addDb = addFactory(addOpts, addSetup, addSuccess);
 
-  EIDB.ERROR_HANDLING = false;
-  try {
-    ret = code();
-    EIDB.ERROR_HANDLING = oldErrorHandling;
-    return ret;
-  }
-  catch (e) {
-    EIDB.ERROR_HANDLING = oldErrorHandling;
-    throw 'error getting database tracking object store';
-  }
-}
+var removeOpts = {
+      dbName: DB_NAME,
+      storeName: STORE_NAME
+    },
+    removeDB = deleteFactory(removeOpts, removeSetup, removeSuccess, removeError);
 
 
-function addNameToDb(target) {
-  return function() {
-    return EIDB.open(DB_NAME).then(function(db) {
-
-      var store = suppressErrorHandling(function() {
-        return db.objectStore(STORE_NAME);
-      });
-
-      return store.put({ name: target.name });
-    });
-  };
-}
-
-function createStore() {
-  return function() {
-    return EIDB.createObjectStore(DB_NAME, STORE_NAME, {keyPath: 'name'});
-  };
-}
-
-function trackDb(db) {
-  var EIDB = window.EIDB;
+function addSetup(args) {
+  var db = args[0];
 
   if (db.name === DB_NAME) { return; }
-
-  addNameToDb(db)()
-    .then(null, createStore())
-    .then(addNameToDb(db))
-    .then(null, function(){}) // if tracking db is deleted unexpectedly
-    .then(function() { EIDB.trigger('databaseTracking.tracked', db.name); });
+  return { name: db.name };
 }
 
-function removeDB(evtResult, args) {
+function addSuccess(args) {
+  var db = args[0];
+
+  return function() {
+    EIDB.trigger('databaseTracking.tracked', db.name);
+  };
+}
+
+function removeSetup(args) {
   var EIDB = window.EIDB,
       method = args[1],
       dbName = args[2] && args[2][0];
 
   if (dbName === DB_NAME || method !== 'deleteDatabase') { return; }
-
-  EIDB.open(DB_NAME).then(function(db) {
-    var store = suppressErrorHandling(function() {
-      return db.objectStore(STORE_NAME);
-    });
-
-    return store.delete(dbName);
-  }).then(function() {
-    EIDB.trigger('databaseTracking.untracked');
-
-  }).then(null, function(e) {
-    EIDB.trigger('databaseTracking.untracked.error', dbName);
-  });
+  return dbName;
 }
 
-addHook('open.onsuccess.resolve.before', trackDb);
+function removeSuccess(args) {
+  return function() {
+    EIDB.trigger('databaseTracking.untracked');
+  };
+}
+
+function removeError(key) {
+  return function(e) {
+    EIDB.trigger('databaseTracking.untracked.error', key);
+  };
+}
+
+addHook('open.onsuccess.resolve.before', addDb);
 addHook('_request.onsuccess.resolve.before', removeDB);
 
 })(RSVP, EIDB);

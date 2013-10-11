@@ -1,0 +1,8 @@
+# compiled output
+/dist/commonjs
+/tmp
+
+# dependencies
+/node_modules
+
+notes.js
